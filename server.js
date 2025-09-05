@@ -1570,12 +1570,24 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
     const riderId = req.session.riderId;
     const { driverId, from, to, date, time, passengers, message } = req.body;
     
+    console.log("Connection request received:", {
+      riderId,
+      driverId,
+      from,
+      to, 
+      date,
+      time,
+      passengers,
+      message
+    });
+    
     if (!driverId) {
       return res.status(400).json({ error: "Driver ID is required" });
     }
 
     // Validate required fields
     if (!from || !to || !date || !time) {
+      console.log("Missing fields:", { from: !!from, to: !!to, date: !!date, time: !!time });
       return res.status(400).json({ error: "Missing required fields: from, to, date, time" });
     }
 
@@ -1586,11 +1598,20 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Rider or driver not found" });
     }
 
-    // Use actual coordinates if available, otherwise set null for manual entry later
+    // Generate mock coordinates for now (will be replaced with real geocoding later)
+    const generateMockCoordinates = (address) => {
+      const lat = 8.0 + Math.random() * 29.0; 
+      const lng = 68.0 + Math.random() * 29.0; 
+      return [lng, lat]; 
+    };
+
+    // Use real pickup coordinates if available, otherwise generate mock ones
     const pickupCoords = rider.currentLocation && rider.currentLocation.latitude ? 
-      [rider.currentLocation.longitude, rider.currentLocation.latitude] : null;
+      [rider.currentLocation.longitude, rider.currentLocation.latitude] : 
+      generateMockCoordinates(from);
     
-    const destinationCoords = null; // Will be set when destination is reached
+    // Generate destination coordinates (will be updated with real location later)
+    const destinationCoords = generateMockCoordinates(to);
     
     // Safely parse passengers with fallback
     let passengerCount = passengers ? parseInt(passengers) : 1;
@@ -1598,16 +1619,29 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       passengerCount = 1;
     }
     
-    // Create a proper date object
+    // Create a proper date object with more flexible parsing
     let requestedDate;
     try {
-      requestedDate = new Date(`${date}T${time}`);
-      // Validate the date
+      // Try different date formats
+      if (time && time.includes(':')) {
+        requestedDate = new Date(`${date}T${time}`);
+      } else {
+        requestedDate = new Date(`${date} ${time}`);
+      }
+      
+      // If still invalid, try with current time
       if (isNaN(requestedDate.getTime())) {
-        throw new Error("Invalid date");
+        requestedDate = new Date(date);
+        if (isNaN(requestedDate.getTime())) {
+          throw new Error("Invalid date format");
+        }
       }
     } catch (error) {
-      return res.status(400).json({ error: "Invalid date or time format" });
+      console.error("Date parsing error:", error, "Date:", date, "Time:", time);
+      return res.status(400).json({ 
+        error: "Invalid date or time format",
+        received: { date, time }
+      });
     }
     
     const connectionRequest = new RideRequest({
@@ -1652,7 +1686,15 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error("Error sending connection request:", error);
-    res.status(500).json({ error: "Error sending connection request" });
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      requestBody: req.body
+    });
+    res.status(500).json({ 
+      error: "Error sending connection request",
+      details: error.message 
+    });
   }
 });
 

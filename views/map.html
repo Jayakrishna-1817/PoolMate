@@ -559,8 +559,8 @@
             // Create or update user marker
             if (!userMarker) {
                 userMarker = L.circleMarker([latitude, longitude], {
-                    radius: 10,
-                    fillColor: currentUserType === 'driver' ? '#3b82f6' : '#10b981',
+                    radius: 12,
+                    fillColor: currentUserType === 'driver' ? '#fbbf24' : '#8b5cf6', // Yellow for driver live location, Purple for rider live location
                     color: 'white',
                     weight: 3,
                     opacity: 1,
@@ -570,7 +570,7 @@
                 const userType = currentUserType === 'driver' ? 'Driver' : 'Rider';
                 userMarker.bindPopup(`
                     <div style="text-align: center;">
-                        <h4>${userType === 'Driver' ? '🚗 Your Location' : '👤 Your Location'}</h4>
+                        <h4>${userType === 'Driver' ? '� Your Live Location' : '� Your Live Location'}</h4>
                         <p>Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}</p>
                     </div>
                 `).openPopup();
@@ -781,7 +781,7 @@
             // Create blue marker for driver
             driverMarker = L.circleMarker([driverLocation.latitude, driverLocation.longitude], {
                 radius: 15,
-                fillColor: '#3b82f6', // Blue for driver
+                fillColor: '#1e40af', // Dark blue for driver
                 color: 'white',
                 weight: 4,
                 opacity: 1,
@@ -792,7 +792,7 @@
             const driverName = driverLocation.name || 'Driver';
             driverMarker.bindPopup(`
                 <div style="text-align: center; min-width: 200px;">
-                    <h4 style="margin: 0 0 10px 0; color: #3b82f6;">🚗 ${driverName}</h4>
+                    <h4 style="margin: 0 0 10px 0; color: #1e40af;">🚗 ${driverName}</h4>
                     <div style="text-align: left; font-size: 12px;">
                         <p style="margin: 3px 0;"><strong>Latitude:</strong> ${driverLocation.latitude.toFixed(6)}</p>
                         <p style="margin: 3px 0;"><strong>Longitude:</strong> ${driverLocation.longitude.toFixed(6)}</p>
@@ -825,7 +825,7 @@
             // Create green marker for rider
             riderMarker = L.circleMarker([riderLocation.latitude, riderLocation.longitude], {
                 radius: 15,
-                fillColor: '#10b981', // Green for rider
+                fillColor: '#dc2626', // Red for rider (more contrast)
                 color: 'white',
                 weight: 4,
                 opacity: 1,
@@ -836,15 +836,15 @@
             const riderName = riderLocation.name || 'Rider';
             riderMarker.bindPopup(`
                 <div style="text-align: center; min-width: 200px;">
-                    <h4 style="margin: 0 0 10px 0; color: #10b981;">👤 ${riderName}</h4>
+                    <h4 style="margin: 0 0 10px 0; color: #dc2626;">👤 ${riderName}</h4>
                     <div style="text-align: left; font-size: 12px;">
                         <p style="margin: 3px 0;"><strong>Latitude:</strong> ${riderLocation.latitude.toFixed(6)}</p>
                         <p style="margin: 3px 0;"><strong>Longitude:</strong> ${riderLocation.longitude.toFixed(6)}</p>
                         <p style="margin: 3px 0;"><strong>Type:</strong> Rider Location</p>
                         <p style="margin: 3px 0;"><strong>Updated:</strong> ${new Date(riderLocation.lastUpdated).toLocaleString()}</p>
                     </div>
-                    <div style="margin-top: 8px; padding: 5px; background: #e8f5e9; border-radius: 3px;">
-                        <small style="color: #388e3c;">🟢 Waiting for pickup</small>
+                    <div style="margin-top: 8px; padding: 5px; background: #fee2e2; border-radius: 3px;">
+                        <small style="color: #dc2626;">� Waiting for pickup</small>
                     </div>
                 </div>
             `);

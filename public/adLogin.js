@@ -350,11 +350,25 @@ function displayRequests(requests) {
 
 // Create request card HTML with rider's first name and loading state
 function createRequestCard(request) {
-    const requestDate = new Date(request.requestedDate);
+    // Safely parse the date with fallback
+    let requestDate;
+    try {
+        requestDate = new Date(request.requestedDate);
+        // Check if date is valid
+        if (isNaN(requestDate.getTime())) {
+            requestDate = new Date(); // Fallback to current date
+        }
+    } catch (error) {
+        requestDate = new Date(); // Fallback to current date
+    }
+    
     const createdDate = new Date(request.createdAt);
     
     // Extract first name from rider's full name
     const riderFirstName = request.rider.name.split(' ')[0];
+    
+    // Safely handle passengers count
+    const passengersCount = request.passengers || 1; // Default to 1 if undefined
     
     return `
         <div class="request-card" data-status="pending" data-request-id="${request.id}">
@@ -362,14 +376,14 @@ function createRequestCard(request) {
                 <div class="request-route">
                     <div class="route-point start">
                         <i class="fas fa-circle"></i>
-                        <span>${request.from}</span>
+                        <span>${request.from || 'Unknown location'}</span>
                     </div>
                     <div class="route-line">
                         <i class="fas fa-arrow-right"></i>
                     </div>
                     <div class="route-point end">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>${request.to}</span>
+                        <span>${request.to || 'Unknown destination'}</span>
                     </div>
                 </div>
                 <div class="request-time">
@@ -398,15 +412,15 @@ function createRequestCard(request) {
                 <div class="ride-info">
                     <div class="info-item">
                         <i class="fas fa-users"></i>
-                        <span>${request.passengers} passenger${request.passengers > 1 ? 's' : ''}</span>
+                        <span>${passengersCount} passenger${passengersCount > 1 ? 's' : ''}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span>${request.rider.city}</span>
+                        <span>${request.rider.city || 'Unknown city'}</span>
                     </div>
                     <div class="info-item">
                         <i class="fas fa-rupee-sign"></i>
-                        <span>₹${request.estimatedFare}</span>
+                        <span>₹${request.estimatedFare || 100}</span>
                     </div>
                 </div>
             </div>

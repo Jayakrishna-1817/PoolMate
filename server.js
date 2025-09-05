@@ -1574,6 +1574,11 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Driver ID is required" });
     }
 
+    // Validate required fields
+    if (!from || !to || !date || !time) {
+      return res.status(400).json({ error: "Missing required fields: from, to, date, time" });
+    }
+
     const rider = await Rider.findById(riderId);
     const driver = await Driver.findById(driverId);
     
@@ -1581,14 +1586,30 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Rider or driver not found" });
     }
 
-    const generateMockCoordinates = (address) => {
-      const lat = 8.0 + Math.random() * 29.0; 
-      const lng = 68.0 + Math.random() * 29.0; 
-      return [lng, lat]; 
-    };
-
-    const pickupCoords = generateMockCoordinates(from);
-    const destinationCoords = generateMockCoordinates(to);
+    // Use actual coordinates if available, otherwise set null for manual entry later
+    const pickupCoords = rider.currentLocation && rider.currentLocation.latitude ? 
+      [rider.currentLocation.longitude, rider.currentLocation.latitude] : null;
+    
+    const destinationCoords = null; // Will be set when destination is reached
+    
+    // Safely parse passengers with fallback
+    let passengerCount = passengers ? parseInt(passengers) : 1;
+    if (isNaN(passengerCount) || passengerCount < 1) {
+      passengerCount = 1;
+    }
+    
+    // Create a proper date object
+    let requestedDate;
+    try {
+      requestedDate = new Date(`${date}T${time}`);
+      // Validate the date
+      if (isNaN(requestedDate.getTime())) {
+        throw new Error("Invalid date");
+      }
+    } catch (error) {
+      return res.status(400).json({ error: "Invalid date or time format" });
+    }
+    
     const connectionRequest = new RideRequest({
       riderId: riderId,
       driverId: driverId,
@@ -1602,8 +1623,8 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
         coordinates: destinationCoords, 
         address: to
       },
-      requestedDate: new Date(`${date}T${time}`),
-      passengers: parseInt(passengers),
+      requestedDate: requestedDate,
+      passengers: passengerCount,
       riderNotes: message || `Connection request from ${rider.firstName} ${rider.lastName}`,
       status: 'pending',
       estimatedFare: Math.floor(Math.random() * 200) + 50 
@@ -1937,12 +1958,39 @@ server.get("/api/driver-status", requireDriverAuth, async (req, res) => {
 });
 server.post("/api/update-location", requireAuth, async (req, res) => {
   try {
+    console.log('Location update request:', {
+      body: req.body,
+      contentType: req.headers['content-type'],
+      userId: req.session.riderId || req.session.driverId,
+      userType: req.session.userType
+    });
+
+    // Check if req.body exists and has required fields
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
+
     const { latitude, longitude } = req.body;
     const userId = req.session.riderId || req.session.driverId;
     const userType = req.session.userType; // 'rider' or 'driver'
 
     if (!latitude || !longitude) {
-      return res.status(400).json({ error: "Latitude and longitude are required" });
+      return res.status(400).json({ 
+        error: "Latitude and longitude are required",
+        received: { latitude, longitude }
+      });
+    }
+
+    // Validate coordinates
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ error: "Invalid latitude or longitude values" });
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return res.status(400).json({ error: "Latitude/longitude out of valid range" });
     }
 
     if (userType === 'rider') {
@@ -1950,9 +1998,9 @@ server.post("/api/update-location", requireAuth, async (req, res) => {
         $set: {
           'currentLocation': {
             type: 'Point',
-            coordinates: [longitude, latitude],
-            latitude,
-            longitude,
+            coordinates: [lng, lat],
+            latitude: lat,
+            longitude: lng,
             lastUpdated: new Date()
           }
         }
@@ -1962,9 +2010,9 @@ server.post("/api/update-location", requireAuth, async (req, res) => {
         $set: {
           'currentLocation': {
             type: 'Point',
-            coordinates: [longitude, latitude],
-            latitude,
-            longitude,
+            coordinates: [lng, lat],
+            latitude: lat,
+            longitude: lng,
             lastUpdated: new Date()
           }
         }
@@ -2115,7 +2163,7 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
 
     const locationData = {};
 
-    // Driver location with enhanced fallback
+    // Only show driver location if it exists and is real
     if (driver && driver.currentLocation && driver.currentLocation.latitude && driver.currentLocation.longitude) {
       locationData.driverLocation = {
         latitude: driver.currentLocation.latitude,
@@ -2124,19 +2172,12 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
         lastUpdated: driver.currentLocation.lastUpdated || new Date().toISOString(),
         type: 'driver'
       };
-    } else if (driver) {
-      // Fallback location for testing
-      locationData.driverLocation = {
-        latitude: 28.6139,
-        longitude: 77.2090,
-        name: `${driver.firstName} ${driver.lastName}`,
-        lastUpdated: new Date().toISOString(),
-        type: 'driver'
-      };
-      console.log('🔄 Using fallback location for driver');
+      console.log('✅ Using REAL driver location:', locationData.driverLocation);
+    } else {
+      console.log('⚠️ No real driver location available');
     }
 
-    // Rider location with enhanced fallback and proper data handling
+    // Only show rider location if it exists and is real
     if (rider && rider.currentLocation && rider.currentLocation.latitude && rider.currentLocation.longitude) {
       locationData.riderLocation = {
         latitude: rider.currentLocation.latitude,
@@ -2146,59 +2187,8 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
         type: 'rider'
       };
       console.log('✅ Using REAL rider location:', locationData.riderLocation);
-    } else if (rider) {
-      // Try to use pickup location from ride request if available
-      if (rideRequest.pickup && rideRequest.pickup.coordinates && rideRequest.pickup.coordinates.length === 2) {
-        locationData.riderLocation = {
-          latitude: rideRequest.pickup.coordinates[1], // coordinates are [lng, lat]
-          longitude: rideRequest.pickup.coordinates[0],
-          name: `${rider.firstName} ${rider.lastName}`,
-          lastUpdated: new Date().toISOString(),
-          type: 'rider'
-        };
-        console.log('🔄 Using PICKUP location for rider:', locationData.riderLocation);
-      } else {
-        // Last resort - use a different fallback location for rider (not same as driver)
-        locationData.riderLocation = {
-          latitude: 28.6289, // Connaught Place coordinates - different from driver
-          longitude: 77.2167,
-          name: `${rider.firstName} ${rider.lastName}`,
-          lastUpdated: new Date().toISOString(),
-          type: 'rider'
-        };
-        console.log('🔄 Using different fallback location for rider:', locationData.riderLocation);
-      }
-    }
-
-    // Validate that rider and driver don't have identical coordinates
-    if (locationData.driverLocation && locationData.riderLocation) {
-      const latDiff = Math.abs(locationData.driverLocation.latitude - locationData.riderLocation.latitude);
-      const lngDiff = Math.abs(locationData.driverLocation.longitude - locationData.riderLocation.longitude);
-      
-      // If coordinates are too close (within 0.001 degrees ~= 100 meters), force different locations
-      if (latDiff < 0.001 && lngDiff < 0.001) {
-        console.log('⚠️ Rider and driver locations are identical or too close, forcing different locations');
-        
-        // Force driver to Delhi Red Fort
-        locationData.driverLocation = {
-          latitude: 28.6562,
-          longitude: 77.2410,
-          name: locationData.driverLocation.name,
-          lastUpdated: new Date().toISOString(),
-          type: 'driver'
-        };
-        
-        // Force rider to India Gate (distinctly different location)
-        locationData.riderLocation = {
-          latitude: 28.6129,
-          longitude: 77.2295,
-          name: locationData.riderLocation.name,
-          lastUpdated: new Date().toISOString(),
-          type: 'rider'
-        };
-        
-        console.log('✅ Forced different locations - Driver: Red Fort, Rider: India Gate');
-      }
+    } else {
+      console.log('⚠️ No real rider location available');
     }
 
     // Include ride request details for UI updates
@@ -2224,7 +2214,7 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
       success: true,
       locations: locationData,
       rideDetails: rideDetails,
-      message: 'Ride locations retrieved successfully'
+      message: 'Real ride locations retrieved successfully'
     });
 
   } catch (error) {
@@ -2440,61 +2430,11 @@ server.get("/api/debug/ride-data/:rideId", async (req, res) => {
   }
 });
 
-// Test endpoint to set sample locations for testing
-server.post("/api/test/set-locations", async (req, res) => {
-  try {
-    const { rideId } = req.body;
-    console.log('🧪 Setting test locations for ride:', rideId);
-    
-    if (!rideId) {
-      return res.status(400).json({ error: "rideId is required" });
-    }
-
-    // Find the ride request
-    const rideRequest = await RideRequest.findById(rideId);
-    if (!rideRequest) {
-      return res.status(404).json({ error: "Ride request not found" });
-    }
-
-    // Set driver location (Delhi area)
-    await Driver.findByIdAndUpdate(rideRequest.driverId, {
-      $set: {
-        'currentLocation': {
-          type: 'Point',
-          coordinates: [77.2090, 28.6139], // [longitude, latitude]
-          latitude: 28.6139,
-          longitude: 77.2090,
-          lastUpdated: new Date()
-        }
-      }
-    });
-
-    // Set rider location (Delhi area - different location)
-    await Rider.findByIdAndUpdate(rideRequest.riderId, {
-      $set: {
-        'currentLocation': {
-          type: 'Point',
-          coordinates: [77.1025, 28.7041], // [longitude, latitude]  
-          latitude: 28.7041,
-          longitude: 77.1025,
-          lastUpdated: new Date()
-        }
-      }
-    });
-
-    console.log('✅ Test locations set successfully');
-
-    res.json({ 
-      success: true, 
-      message: "Test locations set for both driver and rider",
-      driverLocation: { latitude: 28.6139, longitude: 77.2090 },
-      riderLocation: { latitude: 28.7041, longitude: 77.1025 }
-    });
-  } catch (error) {
-    console.error("❌ Error setting test locations:", error);
-    res.status(500).json({ error: "Error setting test locations" });
-  }
-});
+// Test endpoint to set sample locations for testing - DISABLED for production
+// server.post("/api/test/set-locations", async (req, res) => {
+//   // This endpoint has been disabled to prevent mock location interference
+//   res.status(404).json({ error: "Test endpoint disabled" });
+// });
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Enhanced Carpooling Server is running at http://localhost:${PORT}`);

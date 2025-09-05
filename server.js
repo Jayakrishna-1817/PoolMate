@@ -12,7 +12,6 @@ const MongoStore = require("connect-mongo");
 const { sendRideRequestNotification, sendRideRequestConfirmation } = require('./models/email_notification_enhancement');
 const Rider = require("./models/Rider");
 const Driver = require("./models/Driver");
-const nodemon = require("nodemon");
 const Ride = require("./models/Ride");
 const Profile = require("./models/Profile");
 const RideRequest = require("./models/RideRequest");

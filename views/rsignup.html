@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rider Signup - PoolMate</title>
+    <link rel="icon" href="/images/logo.jpg" />
+    <link rel="stylesheet" href="/rsignup.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="signup-container">
+      <div class="signup-branding rider-branding">
+        <div class="branding-content">
+          <div class="logo-container">
+            <i class="fas fa-car-side logo-icon"></i>
+            <span class="brand-name">PoolMate</span>
+          </div>
+          <h1 class="branding-title">Join the Ride Revolution!</h1>
+          <p class="branding-description">
+            Connect with trusted drivers in your area and enjoy affordable,
+            convenient, and eco-friendly transportation.
+          </p>
+          <div class="benefit-highlights">
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="benefit-content">
+                <div class="benefit-title">Save Money</div>
+                <div class="benefit-desc">Up to 60% cheaper than taxis</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fas fa-leaf"></i>
+              </div>
+              <div class="benefit-content">
+                <div class="benefit-title">Go Green</div>
+                <div class="benefit-desc">Reduce your carbon footprint</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="benefit-content">
+                <div class="benefit-title">Meet People</div>
+                <div class="benefit-desc">Connect with your community</div>
+              </div>
+            </div>
+          </div>
+          <div class="stats-showcase">
+            <div class="stat-item">
+              <div class="stat-number">50K+</div>
+              <div class="stat-label">Happy Riders</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">4.9★</div>
+              <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">24/7</div>
+              <div class="stat-label">Support</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="signup-form-section">
+        <div class="form-container">
+          <div class="form-header">
+            <h2 class="form-title">Create Rider Account</h2>
+            <p class="form-subtitle">
+              Start your journey with affordable rides
+            </p>
+          </div>
+
+          <form class="signup-form" id="riderSignupForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName" class="form-label">
+                  <i class="fas fa-user"></i>
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  class="form-input"
+                  placeholder="Enter your first name"
+                  required
+                />
+                <span class="error-message" id="firstNameError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="lastName" class="form-label">
+                  <i class="fas fa-user"></i>
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  class="form-input"
+                  placeholder="Enter your last name"
+                  required
+                />
+                <span class="error-message" id="lastNameError"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="form-label">
+                <i class="fas fa-envelope"></i>
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-input"
+                placeholder="Enter your email address"
+                required
+              />
+              <span class="error-message" id="emailError"></span>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone" class="form-label">
+                  <i class="fas fa-phone"></i>
+                  Phone Number
+                </label>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  class="form-input"
+                  placeholder="+91 9876543210"
+                  required
+                />
+                <span class="error-message" id="phoneError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="dob" class="form-label">
+                  <i class="fas fa-calendar"></i>
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  id="dob"
+                  name="dob"
+                  class="form-input"
+                  required
+                />
+                <span class="error-message" id="dobError"></span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city" class="form-label">
+                  <i class="fas fa-map-marker-alt"></i>
+                  City
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  class="form-input"
+                  placeholder="Enter your city"
+                  required
+                />
+                <span class="error-message" id="cityError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="gender" class="form-label">
+                  <i class="fas fa-venus-mars"></i>
+                  Gender
+                </label>
+                <select id="gender" name="gender" class="form-input" required>
+                  <option value="">Select your gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                  <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+                <span class="error-message" id="genderError"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="form-label">
+                <i class="fas fa-lock"></i>
+                Password
+              </label>
+              <div class="password-input-container">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  class="form-input"
+                  placeholder="Create a strong password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  id="passwordToggle"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <span class="error-message" id="passwordError"></span>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword" class="form-label">
+                <i class="fas fa-lock"></i>
+                Confirm Password
+              </label>
+              <div class="password-input-container">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  class="form-input"
+                  placeholder="Confirm your password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  id="confirmPasswordToggle"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+              <span class="error-message" id="confirmPasswordError"></span>
+            </div>
+
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input
+                  type="checkbox"
+                  id="agreeTerms"
+                  name="agreeTerms"
+                  required
+                />
+                <span class="checkmark"></span>
+                I agree to the
+                <a href="#" class="terms-link">Terms of Service</a> and
+                <a href="#" class="privacy-link">Privacy Policy</a>
+              </label>
+            </div>
+
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input type="checkbox" id="newsletter" name="newsletter" />
+                <span class="checkmark"></span>
+                Send me updates about new features and promotions
+              </label>
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn">
+              <span class="btn-text">Create Account</span>
+              <i class="fas fa-arrow-right btn-icon"></i>
+            </button>
+
+            <div class="divider">
+              <span>or sign up with</span>
+            </div>
+
+            <div class="social-signup">
+              <button type="button" class="social-btn google-btn">
+                <i class="fab fa-google"></i>
+                Google
+              </button>
+              <button type="button" class="social-btn facebook-btn">
+                <i class="fab fa-facebook-f"></i>
+                Facebook
+              </button>
+            </div>
+
+            <div class="form-footer">
+              <p>
+                Already have a rider account?
+                <a href="/rlogin" class="login-link">Sign in here</a>
+              </p>
+              <p>
+                Want to become a driver?
+                <a href="/dsignup" class="driver-link">Driver Signup</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast">
+      <div class="toast-content">
+        <i class="toast-icon"></i>
+        <span class="toast-message"></span>
+      </div>
+      <button class="toast-close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <script src="/rsignup.js"></script>
+  </body>
+</html>

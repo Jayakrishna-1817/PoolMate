@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoolMate - Live Ride Tracking</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .map-container {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .map-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .ride-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .ride-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ride-status {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .ride-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .detail-group {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .coordinates-info {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            font-size: 12px;
+            max-width: 300px;
+        }
+
+        .coordinates-info h4 {
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .coord-item {
+            margin-bottom: 5px;
+            color: #6b7280;
+        }
+
+        .location-permission {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 1000;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .location-permission h3 {
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+
+        .location-permission p {
+            margin-bottom: 20px;
+            color: #6b7280;
+        }
+
+        .location-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .location-btn.secondary {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        @media (max-width: 768px) {
+            .map-header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 15px;
+            }
+            
+            .ride-info {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin: 10px;
+            }
+
+            .coordinates-info {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="map-container">
+        <div class="map-header">
+            <div class="map-title">
+                🗺️ Live Ride Map
+            </div>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                <span>LIVE</span>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <div class="coordinates-info" id="coordinatesInfo">
+            <h4>📍 Location Data</h4>
+            <div class="coord-item">
+                <strong>Your Location:</strong> <span id="userCoords">Not available</span>
+            </div>
+            <div class="coord-item">
+                <strong>Pickup:</strong> <span id="pickupCoords">Loading...</span>
+            </div>
+            <div class="coord-item">
+                <strong>Destination:</strong> <span id="destCoords">Loading...</span>
+            </div>
+            <div class="coord-item">
+                <strong>Other Party:</strong> <span id="otherPartyCoords">Loading...</span>
+            </div>
+        </div>
+
+        <div class="ride-info" id="rideInfo">
+            <div class="ride-header">
+                <h3>Active Ride Details</h3>
+                <div class="ride-status" id="rideStatus">In Progress</div>
+                <button class="close-btn" onclick="closeMap()">Close Map</button>
+            </div>
+            <div class="ride-details">
+                <div class="detail-group">
+                    <div class="detail-label" id="driverLabel">Driver</div>
+                    <div class="detail-value" id="rideDriver">Loading...</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label" id="riderLabel">Rider</div>
+                    <div class="detail-value" id="rideRider">Loading...</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">From</div>
+                    <div class="detail-value" id="rideFrom">Loading...</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label">To</div>
+                    <div class="detail-value" id="rideTo">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="location-permission" id="locationPermission">
+            <h3>Location Access Required</h3>
+            <p>PoolMate needs access to your location to show your position on the map and connect you with your ride partner.</p>
+            <button class="location-btn" id="allowLocation">Allow Location Access</button>
+            <button class="location-btn secondary" id="denyLocation">Continue Without Location</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        // Global variables
+        let map;
+        let userMarker;
+        let otherPartyMarker;
+        let pickupMarker;
+        let destinationMarker;
+        let routeLine;
+        let socket;
+        let watchId;
+        let currentRideId;
+        let currentUserType;
+        let currentUserId;
+        let isLocationEnabled = false;
+        let locationInterval;
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== PAGE LOADED ===');
+            console.log('Current URL:', window.location.href);
+            console.log('URL Search Params:', window.location.search);
+            
+            // Show all URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log('Parsed URL Parameters:');
+            for (let [key, value] of urlParams.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            
+            initializeMap();
+            checkLocationPermission();
+            setupSocketConnection();
+            loadRideData();
+            
+            // Add a test button to manually trigger data refresh
+            const testButton = document.createElement('button');
+            testButton.textContent = 'Debug: Refresh Data';
+            testButton.style.position = 'fixed';
+            testButton.style.top = '100px';
+            testButton.style.right = '20px';
+            testButton.style.zIndex = '10000';
+            testButton.style.padding = '10px';
+            testButton.style.backgroundColor = '#f59e0b';
+            testButton.style.color = 'white';
+            testButton.style.border = 'none';
+            testButton.style.borderRadius = '5px';
+            testButton.style.cursor = 'pointer';
+            
+            testButton.onclick = function() {
+                console.log('=== MANUAL DEBUG REFRESH ===');
+                console.log('Current ride ID:', currentRideId);
+                if (currentRideId) {
+                    fetch(`/api/ride-locations/${currentRideId}`)
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Fresh data:', data);
+                            if (data.success && data.rideDetails) {
+                                updateRideInfo(data.rideDetails);
+                            }
+                            if (data.success && data.locations) {
+                                if (data.locations.driverLocation && data.locations.riderLocation) {
+                                    displayBothLocations(data.locations.driverLocation, data.locations.riderLocation);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Debug fetch error:', error);
+                        });
+                } else {
+                    console.log('No current ride ID available');
+                }
+            };
+            
+            document.body.appendChild(testButton);
+            
+            // Set up button handlers
+            document.getElementById('allowLocation').addEventListener('click', startLocationTracking);
+            document.getElementById('denyLocation').addEventListener('click', () => {
+                document.getElementById('locationPermission').style.display = 'none';
+                loadRideData();
+            });
+        });
+
+        function initializeMap() {
+            // Default to India coordinates
+            map = L.map('map').setView([20.5937, 78.9629], 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        function checkLocationPermission() {
+            if (navigator.permissions) {
+                navigator.permissions.query({name: 'geolocation'}).then(function(result) {
+                    if (result.state === 'granted') {
+                        startLocationTracking();
+                        document.getElementById('locationPermission').style.display = 'none';
+                    } else if (result.state === 'prompt') {
+                        // Show permission prompt
+                        document.getElementById('locationPermission').style.display = 'block';
+                    } else {
+                        // Permission denied
+                        document.getElementById('locationPermission').style.display = 'none';
+                    }
+                });
+            } else {
+                // Older browsers
+                document.getElementById('locationPermission').style.display = 'block';
+            }
+        }
+
+        function setupSocketConnection() {
+            console.log('🔌 Setting up socket connection...');
+            
+            // Check if socket.io is available
+            if (typeof io === 'undefined') {
+                console.warn('⚠️ Socket.io not available, continuing without real-time updates');
+                return;
+            }
+            
+            try {
+                socket = io();
+                
+                socket.on('connect', () => {
+                    console.log('✅ Socket connected to WebSocket server:', socket.id);
+                    
+                    // Join ride room if we have a ride ID
+                    if (currentRideId) {
+                        socket.emit('join-ride', currentRideId);
+                        console.log(`👥 Joined ride room: ${currentRideId}`);
+                    }
+                });
+
+                // Handle location updates from the other party
+                socket.on('location-update', (data) => {
+                    console.log('📍 Real-time location update received:', data);
+                    updateOtherPartyPosition(data.latitude, data.longitude);
+                    document.getElementById('otherPartyCoords').textContent = 
+                        `${data.latitude.toFixed(4)}, ${data.longitude.toFixed(4)}`;
+                });
+                
+                socket.on('location-updated', (data) => {
+                    console.log('📍 Real-time location update:', data);
+                    // Handle real-time location updates
+                    if (data.type === 'driver' && data.location) {
+                        updateDriverLocation(data.location);
+                    } else if (data.type === 'rider' && data.location) {
+                        updateRiderLocation(data.location);
+                    }
+                });
+
+                socket.on('ride-accepted', (data) => {
+                    updateRideStatus('accepted');
+                    document.getElementById('rideStatus').textContent = 'Accepted';
+                    document.getElementById('rideStatus').style.background = '#3b82f6';
+                    
+                    console.log('Ride accepted data:', data);
+                    
+                    // Update ride information if available
+                    if (data.riderContact) {
+                        const rideData = {
+                            driver: { firstName: 'Driver', lastName: 'Name' },
+                            rider: { firstName: data.riderContact.name.split(' ')[0], lastName: data.riderContact.name.split(' ')[1] || '' },
+                            status: 'accepted'
+                    };
+                    updateRideInfo(rideData);
+                }
+                
+                // Handle both driver and rider locations from acceptance response
+                if (data.driverLocation && data.riderLocation) {
+                    displayBothLocations(data.driverLocation, data.riderLocation);
+                } else {
+                    // Handle individual locations for backward compatibility
+                    if (data.driverLocation) {
+                        updateDriverLocation(data.driverLocation);
+                        console.log('Driver location updated:', data.driverLocation);
+                    }
+                    
+                    if (data.riderLocation) {
+                        updateRiderLocation(data.riderLocation);
+                        console.log('Rider location updated:', data.riderLocation);
+                    }
+                }
+                
+                // Start fetching real-time locations
+                startLocationPolling();
+            });
+
+            socket.on('ride-completed', () => {
+                updateRideStatus('completed');
+                document.getElementById('rideStatus').textContent = 'Completed';
+                document.getElementById('rideStatus').style.background = '#10b981';
+                stopLocationTracking();
+                stopLocationPolling();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('❌ Disconnected from WebSocket server');
+            });
+            
+            socket.on('connect_error', (error) => {
+                console.warn('🔌 Socket connection error:', error.message);
+            });
+            
+        } catch (error) {
+            console.warn('⚠️ Failed to initialize socket connection:', error.message);
+        }
+    }
+
+        function startLocationTracking() {
+            document.getElementById('locationPermission').style.display = 'none';
+            isLocationEnabled = true;
+            
+            // Get initial position
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => updateUserPosition(position),
+                    error => handleLocationError(error),
+                    { enableHighAccuracy: true }
+                );
+
+                // Watch for position updates
+                watchId = navigator.geolocation.watchPosition(
+                    position => updateUserPosition(position),
+                    error => handleLocationError(error),
+                    { 
+                        enableHighAccuracy: true, 
+                        maximumAge: 10000, 
+                        timeout: 5000 
+                    }
+                );
+
+                // Start periodic updates to server
+                locationInterval = setInterval(sendLocationToServer, 5000);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function stopLocationTracking() {
+            if (watchId && navigator.geolocation) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+            if (locationInterval) {
+                clearInterval(locationInterval);
+            }
+            isLocationEnabled = false;
+        }
+
+        function updateUserPosition(position) {
+            const { latitude, longitude } = position.coords;
+            
+            // Update coordinates display
+            document.getElementById('userCoords').textContent = 
+                `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            
+            // Create or update user marker
+            if (!userMarker) {
+                userMarker = L.circleMarker([latitude, longitude], {
+                    radius: 10,
+                    fillColor: currentUserType === 'driver' ? '#3b82f6' : '#10b981',
+                    color: 'white',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                const userType = currentUserType === 'driver' ? 'Driver' : 'Rider';
+                userMarker.bindPopup(`
+                    <div style="text-align: center;">
+                        <h4>${userType === 'Driver' ? '🚗 Your Location' : '👤 Your Location'}</h4>
+                        <p>Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}</p>
+                    </div>
+                `).openPopup();
+            } else {
+                userMarker.setLatLng([latitude, longitude]);
+            }
+
+            // If we have ride data, update the route
+            if (currentRideId) {
+                updateRoute();
+            }
+        }
+
+        function sendLocationToServer() {
+            if (!isLocationEnabled || !currentRideId) return;
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                
+                // Send to server via HTTP
+                fetch('/api/update-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        latitude,
+                        longitude,
+                        rideId: currentRideId
+                    })
+                }).catch(error => {
+                    console.error('Error updating location:', error);
+                });
+
+                // And via WebSocket for real-time
+                if (socket && socket.connected) {
+                    socket.emit('location-ping', {
+                        userId: currentUserId,
+                        userType: currentUserType,
+                        latitude,
+                        longitude,
+                        rideId: currentRideId
+                    });
+                }
+            });
+        }
+
+        let locationPollingInterval;
+        let driverMarker;
+        let riderMarker;
+
+        function displayBothLocations(driverLocation, riderLocation) {
+            console.log('=== displayBothLocations called ===');
+            console.log('🚗 Driver location received:', driverLocation);
+            console.log('👤 Rider location received:', riderLocation);
+            
+            // Validate that locations are actually different
+            if (driverLocation && riderLocation) {
+                const driverCoords = `${driverLocation.latitude},${driverLocation.longitude}`;
+                const riderCoords = `${riderLocation.latitude},${riderLocation.longitude}`;
+                
+                if (driverCoords === riderCoords) {
+                    console.warn('⚠️ WARNING: Driver and rider have identical coordinates!');
+                    console.warn('⚠️ This will cause overlapping markers');
+                    
+                    // Force different coordinates for rider if they're the same
+                    riderLocation = {
+                        ...riderLocation,
+                        latitude: riderLocation.latitude + 0.01, // Offset by ~1km
+                        longitude: riderLocation.longitude + 0.01
+                    };
+                    console.log('🔧 Adjusted rider location to:', riderLocation);
+                } else {
+                    console.log('✅ Locations are different - good!');
+                    console.log(`🚗 Driver: ${driverCoords}`);
+                    console.log(`👤 Rider: ${riderCoords}`);
+                }
+            }
+            
+            let markersAdded = false;
+            
+            // Handle driver location
+            if (driverLocation && driverLocation.latitude && driverLocation.longitude) {
+                console.log('✓ Adding driver marker (blue)');
+                updateDriverLocation(driverLocation);
+                markersAdded = true;
+            } else {
+                console.warn('⚠️ Driver location is invalid or missing:', driverLocation);
+                // Try to get from global rideData if available
+                if (window.currentRideData?.driver?.currentLocation) {
+                    console.log('🔄 Using driver location from global data');
+                    updateDriverLocation(window.currentRideData.driver.currentLocation);
+                    markersAdded = true;
+                }
+            }
+            
+            // Handle rider location
+            if (riderLocation && riderLocation.latitude && riderLocation.longitude) {
+                console.log('✓ Adding rider marker (green)');
+                updateRiderLocation(riderLocation);
+                markersAdded = true;
+            } else {
+                console.warn('⚠️ Rider location is invalid or missing:', riderLocation);
+                // Try to get from global rideData if available
+                if (window.currentRideData?.rider?.currentLocation) {
+                    console.log('🔄 Using rider location from global data');
+                    updateRiderLocation(window.currentRideData.rider.currentLocation);
+                    markersAdded = true;
+                }
+            }
+            
+            // Calculate and display distance if both locations are available
+            if (driverLocation?.latitude && riderLocation?.latitude) {
+                const distance = calculateDistance(
+                    driverLocation.latitude, driverLocation.longitude,
+                    riderLocation.latitude, riderLocation.longitude
+                );
+                
+                console.log(`📏 Distance calculated: ${distance.toFixed(2)} km`);
+                updateDistanceDisplay(distance);
+                
+                // Draw route between locations
+                drawRoute(driverLocation, riderLocation);
+                
+                // Fit map to show both locations
+                fitMapToBothLocations(driverLocation, riderLocation);
+                
+                console.log('✓ Map view adjusted to show both locations');
+            } else {
+                console.warn('⚠️ Cannot calculate distance - missing coordinates');
+            }
+            
+            // Update status display
+            const statusDiv = document.getElementById('location-status');
+            if (!statusDiv) {
+                const newStatusDiv = document.createElement('div');
+                newStatusDiv.id = 'location-status';
+                newStatusDiv.style.cssText = `
+                    position: absolute;
+                    bottom: 20px;
+                    left: 20px;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    z-index: 1000;
+                `;
+                document.getElementById('map').appendChild(newStatusDiv);
+            }
+            
+            const statusElement = document.getElementById('location-status');
+            const driverStatus = driverLocation?.latitude ? '🔵 Driver Located' : '❌ Driver Location Missing';
+            const riderStatus = riderLocation?.latitude ? '🟢 Rider Located' : '❌ Rider Location Missing';
+            statusElement.innerHTML = `
+                <div><strong>Location Status:</strong></div>
+                <div>${driverStatus}</div>
+                <div>${riderStatus}</div>
+                <div><small>Updated: ${new Date().toLocaleTimeString()}</small></div>
+            `;
+            
+            console.log('=== displayBothLocations completed ===');
+            return markersAdded;
+        }
+
+        function showDemoLocations() {
+            console.log('📋 Showing demo locations for testing');
+            
+            const demoDriverLocation = {
+                latitude: 28.6139,
+                longitude: 77.2090,
+                name: 'Demo Driver',
+                lastUpdated: new Date().toISOString(),
+                type: 'driver'
+            };
+            
+            const demoRiderLocation = {
+                latitude: 28.6289, // Clearly different location - Connaught Place
+                longitude: 77.2167,
+                name: 'Demo Rider',
+                lastUpdated: new Date().toISOString(),
+                type: 'rider'
+            };
+            
+            console.log('📋 Demo driver location:', demoDriverLocation);
+            console.log('📋 Demo rider location:', demoRiderLocation);
+            
+            displayBothLocations(demoDriverLocation, demoRiderLocation);
+            
+            // Also update the ride info with demo data
+            const demoRideInfo = {
+                driver: { firstName: 'Demo', lastName: 'Driver' },
+                rider: { firstName: 'Demo', lastName: 'Rider' },
+                from: 'Demo Pickup Location',
+                to: 'Demo Destination',
+                pickup: { address: 'Demo Pickup Location' },
+                destination: { address: 'Demo Destination' }
+            };
+            
+            updateRideInfo(demoRideInfo);
+        }
+
+        function updateDriverLocation(driverLocation) {
+            if (!driverLocation) {
+                console.warn('No driver location provided');
+                return;
+            }
+            
+            console.log('Updating driver location:', driverLocation);
+            
+            // Remove existing driver marker
+            if (driverMarker) {
+                map.removeLayer(driverMarker);
+            }
+            
+            // Create blue marker for driver
+            driverMarker = L.circleMarker([driverLocation.latitude, driverLocation.longitude], {
+                radius: 15,
+                fillColor: '#3b82f6', // Blue for driver
+                color: 'white',
+                weight: 4,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            // Enhanced popup with more details
+            const driverName = driverLocation.name || 'Driver';
+            driverMarker.bindPopup(`
+                <div style="text-align: center; min-width: 200px;">
+                    <h4 style="margin: 0 0 10px 0; color: #3b82f6;">🚗 ${driverName}</h4>
+                    <div style="text-align: left; font-size: 12px;">
+                        <p style="margin: 3px 0;"><strong>Latitude:</strong> ${driverLocation.latitude.toFixed(6)}</p>
+                        <p style="margin: 3px 0;"><strong>Longitude:</strong> ${driverLocation.longitude.toFixed(6)}</p>
+                        <p style="margin: 3px 0;"><strong>Type:</strong> Driver Location</p>
+                        <p style="margin: 3px 0;"><strong>Updated:</strong> ${new Date(driverLocation.lastUpdated).toLocaleString()}</p>
+                    </div>
+                    <div style="margin-top: 8px; padding: 5px; background: #e3f2fd; border-radius: 3px;">
+                        <small style="color: #1976d2;">🔵 Driver on the way</small>
+                    </div>
+                </div>
+            `);
+            
+            // Update coordinates display
+            updateCoordinatesDisplay('driver', driverLocation);
+        }
+
+        function updateRiderLocation(riderLocation) {
+            if (!riderLocation) {
+                console.warn('No rider location provided');
+                return;
+            }
+            
+            console.log('Updating rider location:', riderLocation);
+            
+            // Remove existing rider marker
+            if (riderMarker) {
+                map.removeLayer(riderMarker);
+            }
+            
+            // Create green marker for rider
+            riderMarker = L.circleMarker([riderLocation.latitude, riderLocation.longitude], {
+                radius: 15,
+                fillColor: '#10b981', // Green for rider
+                color: 'white',
+                weight: 4,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+
+            // Enhanced popup with more details
+            const riderName = riderLocation.name || 'Rider';
+            riderMarker.bindPopup(`
+                <div style="text-align: center; min-width: 200px;">
+                    <h4 style="margin: 0 0 10px 0; color: #10b981;">👤 ${riderName}</h4>
+                    <div style="text-align: left; font-size: 12px;">
+                        <p style="margin: 3px 0;"><strong>Latitude:</strong> ${riderLocation.latitude.toFixed(6)}</p>
+                        <p style="margin: 3px 0;"><strong>Longitude:</strong> ${riderLocation.longitude.toFixed(6)}</p>
+                        <p style="margin: 3px 0;"><strong>Type:</strong> Rider Location</p>
+                        <p style="margin: 3px 0;"><strong>Updated:</strong> ${new Date(riderLocation.lastUpdated).toLocaleString()}</p>
+                    </div>
+                    <div style="margin-top: 8px; padding: 5px; background: #e8f5e9; border-radius: 3px;">
+                        <small style="color: #388e3c;">🟢 Waiting for pickup</small>
+                    </div>
+                </div>
+            `);
+            
+            // Update coordinates display
+            updateCoordinatesDisplay('rider', riderLocation);
+        }
+
+        function updateCoordinatesDisplay(type, location) {
+            const displayDiv = document.getElementById('coordinates-display');
+            if (!displayDiv) {
+                // Create coordinates display if it doesn't exist
+                const coordDiv = document.createElement('div');
+                coordDiv.id = 'coordinates-display';
+                coordDiv.style.cssText = `
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 15px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                    font-family: Arial, sans-serif;
+                    font-size: 12px;
+                    z-index: 1000;
+                    min-width: 250px;
+                    max-width: 300px;
+                `;
+                document.getElementById('map').appendChild(coordDiv);
+            }
+            
+            const coordDiv = document.getElementById('coordinates-display');
+            let content = coordDiv.innerHTML;
+            
+            if (type === 'driver') {
+                content = content.replace(/<div class="driver-coords">.*?<\/div>/s, '');
+                content += `
+                    <div class="driver-coords">
+                        <h4 style="margin: 0 0 8px 0; color: #3b82f6; font-size: 14px;">🚗 Driver</h4>
+                        <div style="margin-left: 10px;">
+                            <p style="margin: 2px 0;"><strong>Lat:</strong> ${location.latitude.toFixed(6)}</p>
+                            <p style="margin: 2px 0;"><strong>Lng:</strong> ${location.longitude.toFixed(6)}</p>
+                            <p style="margin: 2px 0; color: #666;"><small>Updated: ${new Date(location.lastUpdated).toLocaleString()}</small></p>
+                        </div>
+                        <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                    </div>
+                `;
+            } else if (type === 'rider') {
+                content = content.replace(/<div class="rider-coords">.*?<\/div>/s, '');
+                content += `
+                    <div class="rider-coords">
+                        <h4 style="margin: 0 0 8px 0; color: #10b981; font-size: 14px;">👤 Rider</h4>
+                        <div style="margin-left: 10px;">
+                            <p style="margin: 2px 0;"><strong>Lat:</strong> ${location.latitude.toFixed(6)}</p>
+                            <p style="margin: 2px 0;"><strong>Lng:</strong> ${location.longitude.toFixed(6)}</p>
+                            <p style="margin: 2px 0; color: #666;"><small>Updated: ${new Date(location.lastUpdated).toLocaleString()}</small></p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            coordDiv.innerHTML = content;
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Radius of the Earth in kilometers
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c; // Distance in kilometers
+            return distance;
+        }
+
+        function updateDistanceDisplay(distance) {
+            let distanceElement = document.getElementById('distanceInfo');
+            if (!distanceElement) {
+                // Create distance info element if it doesn't exist
+                distanceElement = document.createElement('div');
+                distanceElement.id = 'distanceInfo';
+                distanceElement.style.cssText = `
+                    position: absolute;
+                    top: 80px;
+                    right: 20px;
+                    background: white;
+                    padding: 10px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    z-index: 1000;
+                    font-weight: 600;
+                `;
+                document.querySelector('.map-container').appendChild(distanceElement);
+            }
+            
+            distanceElement.innerHTML = `
+                <div style="text-align: center;">
+                    <h4 style="margin: 0 0 5px 0; color: #3b82f6;">📍 Distance</h4>
+                    <p style="margin: 0; font-size: 18px; color: #10b981;">${distance.toFixed(2)} km</p>
+                </div>
+            `;
+        }
+
+        function drawRoute(driverLocation, riderLocation) {
+            // Remove existing route
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
+            
+            // Draw a simple line between driver and rider
+            const latlngs = [
+                [driverLocation.latitude, driverLocation.longitude],
+                [riderLocation.latitude, riderLocation.longitude]
+            ];
+            
+            routeLine = L.polyline(latlngs, {
+                color: '#f59e0b',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 10'
+            }).addTo(map);
+        }
+
+        function fitMapToBothLocations(driverLocation, riderLocation) {
+            const group = new L.featureGroup([
+                L.marker([driverLocation.latitude, driverLocation.longitude]),
+                L.marker([riderLocation.latitude, riderLocation.longitude])
+            ]);
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        function startLocationPolling() {
+            if (locationPollingInterval) {
+                clearInterval(locationPollingInterval);
+            }
+            
+            // Poll for real-time locations every 10 seconds
+            locationPollingInterval = setInterval(() => {
+                if (currentRideId) {
+                    console.log('Polling for ride locations:', currentRideId);
+                    fetch(`/api/ride-locations/${currentRideId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Received location update:', data);
+                            
+                            if (data.success) {
+                                // Update ride information if available
+                                if (data.rideDetails) {
+                                    updateRideInfo(data.rideDetails);
+                                }
+                                
+                                // Update locations if available
+                                if (data.locations) {
+                                    // Check if we have both locations
+                                    if (data.locations.driverLocation && data.locations.riderLocation) {
+                                        displayBothLocations(data.locations.driverLocation, data.locations.riderLocation);
+                                    } else {
+                                        // Handle individual location updates
+                                        if (data.locations.driverLocation) {
+                                            updateDriverLocation(data.locations.driverLocation);
+                                        }
+                                        
+                                        if (data.locations.riderLocation) {
+                                            updateRiderLocation(data.locations.riderLocation);
+                                        }
+                                    }
+                                    
+                                    // Update coordinate display
+                                    updateCoordinateDisplay(data.locations);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching ride locations:', error);
+                        });
+                }
+            }, 5000); // Poll every 5 seconds for more frequent updates
+        }
+
+        function updateCoordinateDisplay(locations) {
+            const userCoordsElement = document.getElementById('userCoords');
+            const otherPartyCoordsElement = document.getElementById('otherPartyCoords');
+            
+            if (currentUserType === 'driver') {
+                if (locations.driverLocation && userCoordsElement) {
+                    userCoordsElement.textContent = 
+                        `${locations.driverLocation.latitude.toFixed(4)}, ${locations.driverLocation.longitude.toFixed(4)}`;
+                }
+                if (locations.riderLocation && otherPartyCoordsElement) {
+                    otherPartyCoordsElement.textContent = 
+                        `${locations.riderLocation.latitude.toFixed(4)}, ${locations.riderLocation.longitude.toFixed(4)}`;
+                }
+            } else {
+                if (locations.riderLocation && userCoordsElement) {
+                    userCoordsElement.textContent = 
+                        `${locations.riderLocation.latitude.toFixed(4)}, ${locations.riderLocation.longitude.toFixed(4)}`;
+                }
+                if (locations.driverLocation && otherPartyCoordsElement) {
+                    otherPartyCoordsElement.textContent = 
+                        `${locations.driverLocation.latitude.toFixed(4)}, ${locations.driverLocation.longitude.toFixed(4)}`;
+                }
+            }
+        }
+
+        function stopLocationPolling() {
+            if (locationPollingInterval) {
+                clearInterval(locationPollingInterval);
+                locationPollingInterval = null;
+            }
+        }
+
+        function stopLocationTracking() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            isLocationEnabled = false;
+            
+            // Clean up all markers
+            if (userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
+            }
+            if (driverMarker) {
+                map.removeLayer(driverMarker);
+                driverMarker = null;
+            }
+            if (riderMarker) {
+                map.removeLayer(riderMarker);
+                riderMarker = null;
+            }
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+        }
+
+        function updateOtherPartyPosition(latitude, longitude) {
+            if (!otherPartyMarker) {
+                otherPartyMarker = L.circleMarker([latitude, longitude], {
+                    radius: 10,
+                    fillColor: currentUserType === 'driver' ? '#10b981' : '#3b82f6',
+                    color: 'white',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                const otherType = currentUserType === 'driver' ? 'Rider' : 'Driver';
+                otherPartyMarker.bindPopup(`
+                    <div style="text-align: center;">
+                        <h4>${otherType === 'Driver' ? '🚗 Driver' : '👤 Rider'}</h4>
+                        <p>Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}</p>
+                    </div>
+                `);
+            } else {
+                otherPartyMarker.setLatLng([latitude, longitude]);
+            }
+
+            // Update route if needed
+            if (currentRideId) {
+                updateRoute();
+            }
+        }
+
+        function handleLocationError(error) {
+            let message = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    message = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    message = "An unknown error occurred.";
+                    break;
+            }
+            console.error("Geolocation error:", message);
+            
+            // Fallback to default location
+            if (!userMarker) {
+                userMarker = L.circleMarker([20.5937, 78.9629], {
+                    radius: 10,
+                    fillColor: currentUserType === 'driver' ? '#3b82f6' : '#10b981',
+                    color: 'white',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+            }
+        }
+
+        function loadRideData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rideDataParam = urlParams.get('rideData');
+            currentUserType = urlParams.get('userType') || localStorage.getItem('userType');
+            currentUserId = urlParams.get('userId') || localStorage.getItem('userId');
+            
+            // Also check for direct ride ID parameter
+            const rideIdParam = urlParams.get('rideId');
+            
+            console.log('URL Parameters:', {
+                rideDataParam: rideDataParam ? 'present' : 'missing',
+                rideIdParam,
+                currentUserType,
+                currentUserId,
+                fullURL: window.location.href
+            });
+            
+            let rideData = null;
+            
+            if (rideDataParam) {
+                try {
+                    rideData = JSON.parse(decodeURIComponent(rideDataParam));
+                    localStorage.setItem('currentRideData', JSON.stringify(rideData));
+                    console.log('Parsed ride data from URL:', rideData);
+                } catch (e) {
+                    console.error('Error parsing ride data from URL:', e);
+                }
+            } else if (rideIdParam) {
+                // If we only have rideId, create minimal data structure
+                rideData = {
+                    _id: rideIdParam,
+                    rideId: rideIdParam,
+                    status: 'accepted'
+                };
+                console.log('Created ride data from rideId:', rideData);
+            } else {
+                const storedData = localStorage.getItem('currentRideData');
+                if (storedData) {
+                    try {
+                        rideData = JSON.parse(storedData);
+                        console.log('Loaded ride data from localStorage:', rideData);
+                    } catch (e) {
+                        console.error('Error parsing ride data from localStorage:', e);
+                    }
+                }
+            }
+
+            if (rideData) {
+                currentRideId = rideData._id || rideData.id || rideData.rideId || rideData.requestId;
+                console.log('Loaded ride data:', rideData);
+                console.log('Current ride ID:', currentRideId);
+                
+                // Store ride data globally for access by other functions
+                window.currentRideData = rideData;
+                
+                // Transform data to ensure proper location format
+                if (rideData.driver && rideData.driver.location) {
+                    const driverLoc = rideData.driver.location;
+                    if (driverLoc.lat && driverLoc.lng) {
+                        rideData.driver.currentLocation = {
+                            latitude: driverLoc.lat,
+                            longitude: driverLoc.lng,
+                            name: rideData.driver.name || `${rideData.driver.firstName || 'Driver'} ${rideData.driver.lastName || ''}`,
+                            lastUpdated: new Date().toISOString(),
+                            type: 'driver'
+                        };
+                        console.log('🚗 Transformed driver location:', rideData.driver.currentLocation);
+                    }
+                }
+                
+                if (rideData.rider && rideData.rider.location) {
+                    const riderLoc = rideData.rider.location;
+                    if (riderLoc.lat && riderLoc.lng) {
+                        rideData.rider.currentLocation = {
+                            latitude: riderLoc.lat,
+                            longitude: riderLoc.lng,
+                            name: rideData.rider.name || `${rideData.rider.firstName || 'Rider'} ${rideData.rider.lastName || ''}`,
+                            lastUpdated: new Date().toISOString(),
+                            type: 'rider'
+                        };
+                        console.log('👤 Transformed rider location:', rideData.rider.currentLocation);
+                    }
+                }
+                
+                console.log('📋 Transformed ride data:', rideData);
+                
+                displayRideOnMap(rideData);
+                updateRideInfo(rideData);
+                
+                // Display current locations if available
+                if (rideData.driver?.currentLocation && rideData.rider?.currentLocation) {
+                    console.log('📍 Displaying transformed locations');
+                    displayBothLocations(rideData.driver.currentLocation, rideData.rider.currentLocation);
+                }
+                
+                // Immediately fetch fresh data from server
+                if (currentRideId) {
+                    console.log('🔄 Fetching fresh ride data from server...');
+                    
+                    // Try public endpoint first, then authenticated endpoint, then test endpoint
+                    const endpoints = [
+                        `/api/public/ride-locations/${currentRideId}`,
+                        `/api/ride-locations/${currentRideId}`,
+                        `/api/test/ride-data`
+                    ];
+                    
+                    // Function to try endpoints sequentially
+                    function tryEndpoints(endpointIndex = 0) {
+                        if (endpointIndex >= endpoints.length) {
+                            console.log('📋 No real data available, showing demo locations');
+                            showDemoLocations();
+                            return;
+                        }
+                        
+                        const endpoint = endpoints[endpointIndex];
+                        console.log(`🌐 Trying endpoint: ${endpoint}`);
+                        
+                        fetch(endpoint)
+                            .then(response => {
+                                if (response.ok) {
+                                    return response.json();
+                                } else {
+                                    console.warn(`⚠️ Failed to fetch from ${endpoint}:`, response.status, response.statusText);
+                                    throw new Error(`HTTP ${response.status}`);
+                                }
+                            })
+                            .then(data => {
+                                console.log('📡 Fresh ride data received:', data);
+                                
+                                if (data.success && data.rideDetails) {
+                                    // Update global data
+                                    window.currentRideData = { ...window.currentRideData, ...data.rideDetails };
+                                    updateRideInfo(data.rideDetails);
+                                }
+                                
+                                if (data.success && data.locations) {
+                                    console.log('📍 Location data available:', data.locations);
+                                    if (data.locations.driverLocation || data.locations.riderLocation) {
+                                        console.log('📍 Displaying available locations on map');
+                                        displayBothLocations(data.locations.driverLocation, data.locations.riderLocation);
+                                        return; // Success, don't try more endpoints
+                                    }
+                                }
+                                
+                                // If we get here, data wasn't complete, try next endpoint
+                                console.warn('⚠️ Incomplete data, trying next endpoint');
+                                tryEndpoints(endpointIndex + 1);
+                            })
+                            .catch(error => {
+                                console.warn(`⚠️ Error fetching from ${endpoint}:`, error.message);
+                                // Try next endpoint
+                                tryEndpoints(endpointIndex + 1);
+                            });
+                    }
+                    
+                    // Start trying endpoints
+                    tryEndpoints();
+                }
+                
+                // Start location polling for accepted rides
+                if (rideData.status === 'accepted') {
+                    startLocationPolling();
+                }
+                
+                // Join the ride room for real-time updates
+                if (socket && currentRideId) {
+                    socket.emit('join-ride', currentRideId);
+                }
+            } else {
+                console.log('📋 No ride data found - using demo data for testing');
+                
+                // Demo data for testing with enhanced location info
+                const demoData = {
+                    _id: 'demo_ride_123',
+                    driver: {
+                        _id: 'demo_driver_123',
+                        firstName: "Demo",
+                        lastName: "Driver",
+                        currentLocation: {
+                            latitude: 28.6139,
+                            longitude: 77.2090,
+                            lastUpdated: new Date().toISOString(),
+                            name: "Demo Driver"
+                        }
+                    },
+                    rider: {
+                        _id: 'demo_rider_123',
+                        firstName: "Demo",
+                        lastName: "Rider",
+                        currentLocation: {
+                            latitude: 28.6289, // Different location - Connaught Place
+                            longitude: 77.2167,
+                            lastUpdated: new Date().toISOString(),
+                            name: "Demo Rider"
+                        }
+                    },
+                    pickup: {
+                        address: "Connaught Place, Delhi",
+                        coordinates: [77.2167, 28.6289]
+                    },
+                    destination: {
+                        address: "India Gate, Delhi", 
+                        coordinates: [77.2295, 28.6129]
+                    },
+                    from: "Connaught Place, Delhi",
+                    to: "India Gate, Delhi",
+                    status: "accepted"
+                };
+                
+                currentRideId = demoData._id;
+                currentUserType = currentUserType || 'rider';
+                currentUserId = currentUserId || demoData.rider._id;
+                
+                // Store demo data globally
+                window.currentRideData = demoData;
+                
+                console.log('📋 Using demo data:', demoData);
+                
+                displayRideOnMap(demoData);
+                updateRideInfo(demoData);
+                
+                // Display demo locations immediately
+                if (demoData.driver.currentLocation && demoData.rider.currentLocation) {
+                    console.log('📍 Displaying demo locations');
+                    displayBothLocations(demoData.driver.currentLocation, demoData.rider.currentLocation);
+                }
+            }
+        }
+
+        function displayRideOnMap(rideData) {
+            const { driver, rider, pickup, destination, from, to, status, driverLocation, riderLocation } = rideData;
+
+            let pickupLat, pickupLng, destLat, destLng;
+            
+            if (pickup && pickup.coordinates) {
+                pickupLng = pickup.coordinates[0];
+                pickupLat = pickup.coordinates[1];
+            } else if (pickup && pickup.latitude && pickup.longitude) {
+                pickupLat = pickup.latitude;
+                pickupLng = pickup.longitude;
+            } else {
+                pickupLat = 28.6139;
+                pickupLng = 77.2090;
+            }
+
+            if (destination && destination.coordinates) {
+                destLng = destination.coordinates[0];
+                destLat = destination.coordinates[1];
+            } else if (destination && destination.latitude && destination.longitude) {
+                destLat = destination.latitude;
+                destLng = destination.longitude;
+            } else {
+                destLat = 28.6129;
+                destLng = 77.2295;
+            }
+
+            // Clear existing markers if any
+            if (pickupMarker) map.removeLayer(pickupMarker);
+            if (destinationMarker) map.removeLayer(destinationMarker);
+            if (otherPartyMarker) map.removeLayer(otherPartyMarker);
+            if (driverMarker) map.removeLayer(driverMarker);
+            if (riderMarker) map.removeLayer(riderMarker);
+            if (routeLine) map.removeLayer(routeLine);
+
+            // Add pickup marker
+            pickupMarker = L.circleMarker([pickupLat, pickupLng], {
+                radius: 12,
+                fillColor: '#10b981',
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            pickupMarker.bindPopup(`
+                <div style="text-align: center;">
+                    <h4>📍 Pickup Location</h4>
+                    <p><strong>${pickup?.address || from}</strong></p>
+                    <p>Lat: ${pickupLat.toFixed(4)}, Lng: ${pickupLng.toFixed(4)}</p>
+                </div>
+            `);
+
+            // Add destination marker
+            destinationMarker = L.circleMarker([destLat, destLng], {
+                radius: 12,
+                fillColor: '#ef4444',
+                color: 'white',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            // Add real driver/rider locations if available and ride is accepted
+            if (status === 'accepted') {
+                if (driverLocation && riderLocation) {
+                    // Display both locations with distance and route
+                    displayBothLocations(driverLocation, riderLocation);
+                    console.log('Displaying both real locations:', { driverLocation, riderLocation });
+                } else {
+                    // Handle individual locations
+                    if (driverLocation) {
+                        updateDriverLocation(driverLocation);
+                        console.log('Displaying real driver location:', driverLocation);
+                    }
+                    
+                    if (riderLocation) {
+                        updateRiderLocation(riderLocation);
+                        console.log('Displaying real rider location:', riderLocation);
+                    }
+                }
+            }
+
+            destinationMarker.bindPopup(`
+                <div style="text-align: center;">
+                    <h4>🎯 Destination</h4>
+                    <p><strong>${destination?.address || to}</strong></p>
+                    <p>Lat: ${destLat.toFixed(4)}, Lng: ${destLng.toFixed(4)}</p>
+                </div>
+            `);
+
+            // Set initial other party position
+            const otherParty = currentUserType === 'driver' ? rider : driver;
+            if (otherParty?.location) {
+                updateOtherPartyPosition(otherParty.location.lat, otherParty.location.lng);
+            }
+
+            // Update coordinates display
+            document.getElementById('pickupCoords').textContent = 
+                `${pickupLat.toFixed(4)}, ${pickupLng.toFixed(4)}`;
+            document.getElementById('destCoords').textContent = 
+                `${destLat.toFixed(4)}, ${destLng.toFixed(4)}`;
+
+            // Draw initial route
+            updateRoute();
+
+            // Fit map to show all markers
+            const bounds = L.latLngBounds([
+                [pickupLat, pickupLng],
+                [destLat, destLng]
+            ]);
+            if (userMarker) bounds.extend(userMarker.getLatLng());
+            if (otherPartyMarker) bounds.extend(otherPartyMarker.getLatLng());
+            map.fitBounds(bounds.pad(0.1));
+        }
+
+        function updateRoute() {
+            if (!pickupMarker || !destinationMarker) return;
+
+            const pickupPos = pickupMarker.getLatLng();
+            const destPos = destinationMarker.getLatLng();
+            const userPos = userMarker ? userMarker.getLatLng() : pickupPos;
+            const otherPos = otherPartyMarker ? otherPartyMarker.getLatLng() : pickupPos;
+
+            // Remove existing route if any
+            if (routeLine) map.removeLayer(routeLine);
+
+            // Create new route based on user type
+            if (currentUserType === 'driver') {
+                // Driver view: show route from driver to pickup to destination
+                routeLine = L.polyline([
+                    [userPos.lat, userPos.lng],
+                    [pickupPos.lat, pickupPos.lng],
+                    [destPos.lat, destPos.lng]
+                ], {
+                    color: '#3b82f6',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10'
+                }).addTo(map);
+            } else {
+                // Rider view: show route from driver to pickup to destination
+                routeLine = L.polyline([
+                    [otherPos.lat, otherPos.lng],
+                    [pickupPos.lat, pickupPos.lng],
+                    [destPos.lat, destPos.lng]
+                ], {
+                    color: '#3b82f6',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10'
+                }).addTo(map);
+            }
+        }
+
+        function updateRideInfo(rideData) {
+            console.log('updateRideInfo called with:', rideData);
+            
+            if (!rideData) {
+                console.warn('No ride data provided to updateRideInfo');
+                return;
+            }
+            
+            const { driver, rider, pickup, destination, from, to, status } = rideData;
+            
+            // Update driver information
+            const driverElement = document.getElementById('rideDriver');
+            if (driverElement) {
+                let driverText = 'Loading...';
+                if (driver) {
+                    if (driver.firstName && driver.lastName) {
+                        driverText = `${driver.firstName} ${driver.lastName}`;
+                    } else if (driver.name) {
+                        driverText = driver.name;
+                    } else if (typeof driver === 'string') {
+                        driverText = driver;
+                    } else {
+                        driverText = 'Driver Info';
+                    }
+                }
+                driverElement.textContent = driverText;
+                console.log('Updated driver display to:', driverText);
+            }
+            
+            // Update rider information
+            const riderElement = document.getElementById('rideRider');
+            if (riderElement) {
+                let riderText = 'Loading...';
+                if (rider) {
+                    if (rider.firstName && rider.lastName) {
+                        riderText = `${rider.firstName} ${rider.lastName}`;
+                    } else if (rider.name) {
+                        riderText = rider.name;
+                    } else if (typeof rider === 'string') {
+                        riderText = rider;
+                    } else {
+                        riderText = 'Rider Info';
+                    }
+                }
+                riderElement.textContent = riderText;
+                console.log('Updated rider display to:', riderText);
+            }
+            
+            // Update pickup location
+            const fromElement = document.getElementById('rideFrom');
+            if (fromElement) {
+                let fromText = 'Loading...';
+                if (pickup?.address) {
+                    fromText = pickup.address;
+                } else if (from) {
+                    fromText = from;
+                } else if (pickup && typeof pickup === 'string') {
+                    fromText = pickup;
+                } else {
+                    fromText = 'Pickup Location';
+                }
+                fromElement.textContent = fromText;
+                console.log('Updated from display to:', fromText);
+            }
+            
+            // Update destination
+            const toElement = document.getElementById('rideTo');
+            if (toElement) {
+                let toText = 'Loading...';
+                if (destination?.address) {
+                    toText = destination.address;
+                } else if (to) {
+                    toText = to;
+                } else if (destination && typeof destination === 'string') {
+                    toText = destination;
+                } else {
+                    toText = 'Destination';
+                }
+                toElement.textContent = toText;
+                console.log('Updated to display to:', toText);
+            }
+            
+            // Update status display
+            updateRideStatus(status || 'In Progress');
+        }
+
+        function updateRideStatus(status) {
+            const statusElement = document.getElementById('rideStatus');
+            if (!statusElement) return;
+
+            statusElement.textContent = status || 'In Progress';
+            
+            // Set color based on status
+            switch(status) {
+                case 'pending':
+                    statusElement.style.background = '#f59e0b';
+                    break;
+                case 'accepted':
+                    statusElement.style.background = '#3b82f6';
+                    break;
+                case 'completed':
+                    statusElement.style.background = '#10b981';
+                    break;
+                case 'cancelled':
+                    statusElement.style.background = '#ef4444';
+                    break;
+                default:
+                    statusElement.style.background = '#3b82f6';
+            }
+        }
+
+        function closeMap() {
+            stopLocationTracking();
+            
+            if (window.opener) {
+                window.opener.focus();
+                window.close();
+            } else {
+                window.history.back();
+            }
+        }
+
+        window.addEventListener('resize', function() {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
+
+        // Make these functions available globally if needed
+        window.updateRideData = function(newRideData) {
+            currentRideId = newRideData._id || newRideData.id;
+            localStorage.setItem('currentRideData', JSON.stringify(newRideData));
+            
+            displayRideOnMap(newRideData);
+            updateRideInfo(newRideData);
+        };
+    </script>
+</body>
+</html>

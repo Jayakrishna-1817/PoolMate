@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard - PoolMate</title>
+    <link rel="icon" href="../images/logo.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="/adLogin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="header-container">
+            <div class="header-left">
+                <div class="logo-container">
+                    <img src="../images/logo.jpg" alt="PoolMate Logo" class="logo-icon">
+                    <span class="brand-name" style="color: black;">PoolMate</span>
+                </div>
+                <h1 class="page-title">Driver Dashboard</h1>
+            </div>
+            
+            <div class="header-right">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="requestsBadge">0</span>
+                </div>
+                
+                <div class="profile-dropdown">
+                    <div class="profile-trigger" id="profileTrigger">
+                        <img src="/api/driver-profile-image" alt="Profile" class="profile-avatar">
+                        <span class="profile-name" id="driverProfileName">Loading...</span>
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </div>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/dprofile" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            Profile
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-question-circle"></i>
+                            Help
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="dashboard-main">
+        <aside class="dashboard-sidebar">
+            <nav class="sidebar-nav">
+                <a href="#overview" class="nav-item active" data-section="overview">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#requests" class="nav-item" data-section="requests">
+                    <i class="fas fa-inbox"></i>
+                    <span>Ride Requests</span>
+                    <span class="nav-badge" id="navRequestsBadge">0</span>
+                </a>
+                <a href="#active-rides" class="nav-item" data-section="active-rides">
+                    <i class="fas fa-route"></i>
+                    <span>Active Rides</span>
+                </a>
+                <a href="#earnings" class="nav-item" data-section="earnings">
+                    <i class="fas fa-wallet"></i>
+                    <span>Earnings</span>
+                </a>
+                <a href="#ratings" class="nav-item" data-section="ratings">
+                    <i class="fas fa-star"></i>
+                    <span>Ratings</span>
+                </a>
+                <a href="#vehicle" class="nav-item" data-section="vehicle">
+                    <i class="fas fa-car"></i>
+                    <span>Vehicle Info</span>
+                </a>
+            </nav>
+        </aside>
+        <div class="dashboard-content">
+            <section id="overview" class="content-section active">
+                <div class="section-header">
+                    <h2 class="section-title">Dashboard Overview</h2>
+                <div class="status-indicator offline" id="driverStatusIndicator">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Offline</span>
+                </div>
+                <button class="toggle-status-btn offline" id="toggleStatusBtn">
+                    <i class="fas fa-toggle-off"></i>
+                </button>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon earnings">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="monthlyEarnings">₹0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon rides">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalRides">0</div>
+                            <div class="stat-label">Completed Rides</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon rating">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="averageRating">0.0</div>
+                            <div class="stat-label">Average Rating</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon distance">
+                            <i class="fas fa-road"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalDistance">0</div>
+                            <div class="stat-label">KM Driven</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3 class="activity-title">Recent Activity</h3>
+                    <div class="activity-list" id="recentActivityContainer">
+                        <div class="activity-item">
+                            <div class="activity-icon completed">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-text">Welcome to PoolMate Driver Dashboard!</div>
+                                <div class="activity-time">Just now</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="requests" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Ride Requests</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="pending">Pending</button>
+                        <button class="filter-tab" data-filter="accepted">Accepted</button>
+                    </div>
+                </div>
+
+                <div class="requests-container" id="requestsContainer">
+                </div>
+            </section>
+            <section id="active-rides" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Active Rides</h2>
+                </div>
+                <div class="empty-state">
+                    <i class="fas fa-route"></i>
+                    <h3>No Active Rides</h3>
+                    <p>You don't have any active rides at the moment.</p>
+                </div>
+            </section>
+
+            <section id="earnings" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Earnings</h2>
+                </div>
+                <div class="earnings-summary">
+                    <div class="earnings-card">
+                        <h3>Today</h3>
+                        <div class="amount" id="todayEarnings">₹0</div>
+                    </div>
+                    <div class="earnings-card">
+                        <h3>This Week</h3>
+                        <div class="amount" id="weeklyEarnings">₹0</div>
+                    </div>
+                    <div class="earnings-card">
+                        <h3>This Month</h3>
+                        <div class="amount" id="monthlyEarningsDetail">₹0</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ratings" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Ratings & Reviews</h2>
+                </div>
+                <div class="rating-overview">
+                    <div class="rating-score">
+                        <div class="score" id="ratingScore">0.0</div>
+                        <div class="stars" id="ratingStars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="total-reviews" id="totalReviews">Based on 0 reviews</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vehicle" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Vehicle Information</h2>
+                </div>
+                <div class="vehicle-info" id="vehicleInfo">
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="mapModal" class="map-modal" style="display: none;">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3>Ride Route</h3>
+                <button class="map-close-btn" onclick="closeMap()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="map" class="map-container"></div>
+            <div class="map-modal-footer">
+                <div class="ride-info">
+                    <div class="rider-info">
+                        <img id="mapRiderAvatar" src="/api/rider-profile-image" alt="Rider" class="rider-avatar">
+                        <div class="rider-details">
+                            <div id="mapRiderName" class="rider-name">Loading...</div>
+                            <div id="mapRiderPhone" class="rider-phone">Loading...</div>
+                        </div>
+                    </div>
+                    <div class="route-details">
+                        <div class="route-point">
+                            <i class="fas fa-circle start-icon"></i>
+                            <span id="mapPickupLocation">Loading...</span>
+                        </div>
+                        <div class="route-point">
+                            <i class="fas fa-map-marker-alt end-icon"></i>
+                            <span id="mapDestinationLocation">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+        <button class="toast-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/adLogin.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PoolMate - Smart Carpooling Solution</title>
+    <link rel="icon" type="image/png" href="/images/logo.jpg">
+    <link rel="stylesheet" href="/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo-container">
+                     <img src="/images/logo.jpg" alt="PoolMate Logo" class="logo-icon">
+                    <span class="brand-name">PoolMate</span>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#reviews" class="nav-link">Reviews</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            
+            <div class="nav-actions">
+                <div class="signin-dropdown">
+                    <button class="signin-btn">
+                        <i class="fas fa-user"></i>
+                        Sign In
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="/dlogin" class="dropdown-item">
+                            <i class="fa-solid fa-car"></i>
+                            Driver Login
+                        </a>
+                        <a href="/rlogin" class="dropdown-item">
+                            <i class="fas fa-user-friends"></i>
+                            Rider Login
+                        </a>
+                    </div>
+                </div>
+                <button class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                
+                <h1 class="hero-title">
+                    Share Rides,
+                    <span class="gradient-text">Save Money</span>,
+                    Reduce Emissions
+                </h1>
+                <p class="hero-description">
+                    Join thousands of commuters who are already saving money and reducing their carbon footprint. 
+                    PoolMate connects you with verified drivers and riders for safe, affordable, and sustainable travel.
+                </p>
+                <div class="hero-actions">
+                    <button class="cta-primary" onclick="start()">
+                        <i class="fas fa-rocket"></i>
+                        Start Your Journey
+                    </button>
+                    <button class="cta-secondary">
+                        <i class="fas fa-play"></i>
+                        Watch Demo
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">50K+</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">₹2M+</span>
+                        <span class="stat-label">Money Saved</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100K+</span>
+                        <span class="stat-label">CO₂ Reduced</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="hero-image-container">
+                    <div class="floating-card card-1">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Real-time Tracking</span>
+                    </div>
+                    <div class="floating-card card-2">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Verified Users</span>
+                    </div>
+                    <div class="floating-card card-3">
+                        <i class="fas fa-wallet"></i>
+                        <span>Save 60% on Fuel</span>
+                    </div>
+                    <div class="hero-car">
+                        <i class="fas fa-car"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose PoolMate?</h2>
+                <p class="section-subtitle">Experience the future of commuting with our innovative features</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-piggy-bank"></i>
+                    </div>
+                    <h3 class="feature-title">Save Money</h3>
+                    <p class="feature-description">
+                        Reduce your commuting costs by up to 60% by sharing fuel expenses with fellow travelers.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <h3 class="feature-title">Eco-Friendly</h3>
+                    <p class="feature-description">
+                        Contribute to a greener planet by reducing the number of vehicles on the road.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Build Community</h3>
+                    <p class="feature-description">
+                        Connect with like-minded commuters and build lasting friendships on your daily journey.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3 class="feature-title">Real-Time Matching</h3>
+                    <p class="feature-description">
+                        Find rides instantly with our smart algorithm that matches you based on route and schedule.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Verified Users</h3>
+                    <p class="feature-description">
+                        Travel safely with our comprehensive verification system and user rating mechanism.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Smart App</h3>
+                    <p class="feature-description">
+                        Enjoy seamless booking, live tracking, and in-app communication for the best experience.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">How PoolMate Works</h2>
+                <p class="section-subtitle">Get started in just three simple steps</p>
+            </div>
+            
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Sign Up & Verify</h3>
+                        <p class="step-description">
+                            Create your account and complete our quick verification process for a safe community.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Find or Offer Rides</h3>
+                        <p class="step-description">
+                            Search for available rides or offer your own. Our smart matching connects you instantly.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Travel & Save</h3>
+                        <p class="step-description">
+                            Enjoy your journey with real-time tracking, secure payments, and great company.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews" class="reviews">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">What Our Users Say</h2>
+                <p class="section-subtitle">Join thousands of satisfied commuters</p>
+            </div>
+            
+            <div class="reviews-grid">
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="reviewer-info">
+                            <h4 class="reviewer-name">Rahul Mehta</h4>
+                            <p class="reviewer-title">Software Engineer</p>
+                        </div>
+                        <div class="review-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="review-text">
+                        "PoolMate has completely transformed my daily commute. I've saved over ₹15,000 in the last 6 months 
+                        and made some great friends along the way. The app is intuitive and the verification process gives me confidence."
+                    </p>
+                </div>
+                
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="reviewer-info">
+                            <h4 class="reviewer-name">Sneha Reddy</h4>
+                            <p class="reviewer-title">College Student</p>
+                        </div>
+                        <div class="review-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="review-text">
+                        "As a student, every rupee counts. PoolMate helps me get to campus affordably while meeting 
+                        fellow students. The safety features and real-time tracking give my parents peace of mind too."
+                    </p>
+                </div>
+                
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="reviewer-info">
+                            <h4 class="reviewer-name">Amit Sharma</h4>
+                            <p class="reviewer-title">Business Analyst</p>
+                        </div>
+                        <div class="review-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="review-text">
+                        "The environmental impact was my main motivation, but the cost savings and social aspect 
+                        have been amazing bonuses. PoolMate makes carpooling effortless and enjoyable."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact" class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo-container">
+                        <i class="fas fa-car-side logo-icon"></i>
+                        <span class="brand-name">PoolMate</span>
+                    </div>
+                    <p class="footer-description">
+                        Making commuting smarter, affordable, and sustainable for everyone.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-title">Product</h4>
+                        <ul class="footer-list">
+                            <li><a href="#" class="footer-link">Features</a></li>
+                            <li><a href="#" class="footer-link">Pricing</a></li>
+                            <li><a href="#" class="footer-link">Safety</a></li>
+                            <li><a href="#" class="footer-link">Support</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4 class="footer-title">Company</h4>
+                        <ul class="footer-list">
+                            <li><a href="#" class="footer-link">About Us</a></li>
+                            <li><a href="#" class="footer-link">Careers</a></li>
+                            <li><a href="#" class="footer-link">Press</a></li>
+                            <li><a href="#" class="footer-link">Blog</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-column">
+                        <h4 class="footer-title">Legal</h4>
+                        <ul class="footer-list">
+                            <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                            <li><a href="#" class="footer-link">Terms of Service</a></li>
+                            <li><a href="#" class="footer-link">Cookie Policy</a></li>
+                            <li><a href="#" class="footer-link">GDPR</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p class="copyright">© 2025 PoolMate Pvt. Ltd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/script.js"></script>
+    <script>
+        function start(){
+            window.location.href = "/rlogin";
+        }
+    </script>
+</body>
+</html>

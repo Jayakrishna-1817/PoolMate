@@ -1,0 +1,86 @@
+
+@import url('rprofile.css');
+
+.profile-header {
+    border-bottom: 3px solid #2d8bff;
+}
+
+.info-section {
+  margin-top: 40px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+  border-left: 4px solid #007bff;
+  padding-left: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+
+.info-label {
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 15px;
+}
+
+
+.info-item input[type="text"],
+.info-item input[type="email"],
+.info-item input[type="date"] {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+}
+
+.info-item input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+}
+
+
+.profile-actions button[type="submit"] {
+  padding: 10px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.profile-actions button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}

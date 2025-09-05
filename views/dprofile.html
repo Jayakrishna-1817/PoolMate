@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Driver Profile - PoolMate</title>
+  <link rel="icon" href="../images/logo.jpg" />
+  <link rel="stylesheet" href="/dprofile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+  <header class="profile-header">
+    <div class="header-container">
+      <div class="header-left">
+        <a href="/adLogin" class="back-btn">
+          <i class="fas fa-arrow-left"></i>
+          <span>Back to Dashboard</span>
+        </a>
+        <div class="logo-container">
+          <img src="../images/logo.jpg" alt="" />
+          <span class="brand-name">PoolMate</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="profile-dropdown">
+          <div class="profile-trigger" id="profileTrigger">
+            <img id="profilePicture" src="/images/default-avatar.jpg" alt="Profile" class="profile-avatar" />
+            <h1 class="profile-name" id="driverName">Loading...</h1>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+          </div>
+          <div class="dropdown-menu" id="profileDropdown">
+            <a href="#" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+            <a href="#" class="dropdown-item"><i class="fas fa-question-circle"></i> Help</a>
+            <div class="dropdown-divider"></div>
+            <a href="index.html" class="dropdown-item logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="profile-main">
+    <div class="profile-container">
+      <section class="profile-hero">
+        <div class="profile-cover">
+          <div class="cover-overlay"></div>
+          <button class="change-cover-btn" onclick="changeCoverPhoto()">
+            <i class="fas fa-camera"></i> Change Cover
+          </button>
+        </div>
+        <div class="profile-info">
+          <div class="profile-picture-section">
+            <div class="profile-picture-container">
+              <img id="profilePicturePreview" src="/api/driver-profile-image" alt="Profile" class="profile-picture" />
+              <form id="imageUploadForm" enctype="multipart/form-data">
+                <input type="file" name="profileImage" id="profileImageInput" accept="image/*" />
+                <button type="submit" class="change-picture-btn"><i class="fas fa-camera"></i></button>
+              </form>
+            </div>
+            <div class="verification-badges">
+              <div class="badge verified"><i class="fas fa-check-circle"></i> <span>Email Verified</span></div>
+              <div class="badge verified"><i class="fas fa-check-circle"></i> <span>Phone Verified</span></div>
+              <div class="badge verified"><i class="fas fa-check-circle"></i> <span>License Verified</span></div>
+            </div>
+          </div>
+          <div class="profile-details">
+            <span class="profile-name" id="driverNameTop">Loading...</span>
+            <p class="profile-title">Verified Driver</p>
+            <div class="profile-stats">
+              <div class="stat"><div class="stat-value">120</div><div class="stat-label">Rides Given</div></div>
+              <div class="stat"><div class="stat-value">4.8</div><div class="stat-label">Rating</div></div>
+              <div class="stat"><div class="stat-value">3</div><div class="stat-label">Years Active</div></div>
+            </div>
+            <div class="profile-actions">
+              <button class="btn-primary" onclick="editProfile()"><i class="fas fa-edit"></i> Edit Profile</button>
+              <button class="btn-secondary" onclick="shareProfile()"><i class="fas fa-share"></i> Share Profile</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="tab-content">
+        <div class="tab-panel active" id="personal">
+          <form action="/profile" method="POST" style="display: contents;">
+            <div class="info-section">
+              <h3 class="section-title">Basic Information</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-user"></i> Full Name</label>
+                  <input type="text" name="fullName" readonly />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-envelope"></i> Email</label>
+                  <input type="email" name="email" readonly />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-phone"></i> Phone</label>
+                  <input type="text" name="phone" readonly />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-calendar"></i> Date of Birth</label>
+                  <input type="date" name="dateOfBirth" />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-venus-mars"></i> Gender</label>
+                  <input type="text" name="gender" />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-map-marker-alt"></i> City</label>
+                  <input type="text" name="city" />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-car"></i> Vehicle Model</label>
+                  <input type="text" name="vehicleModel" />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-id-card"></i> License Number</label>
+                  <input type="text" name="licenseNumber" />
+                </div>
+              </div>
+            </div>
+
+            <div class="info-section">
+              <h3 class="section-title">Emergency Contact</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-user-friends"></i> Contact Name</label>
+                  <input type="text" name="emergencyName" />
+                </div>
+                <div class="info-item">
+                  <label class="info-label"><i class="fas fa-phone-alt"></i> Contact Phone</label>
+                  <input type="text" name="emergencyPhone" />
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-actions" style="text-align: center; margin-top: 20px;">
+              <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Save Profile</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/dprofile.js"></script>
+</body>
+</html>

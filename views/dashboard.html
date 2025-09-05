@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PoolMate</title>
+    <link rel="icon" type="image/png" href="/images/logo.jpg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .user-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-type {
+            font-size: 0.875rem;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            padding: 2rem 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 2rem;
+            color: #6b7280;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border-left-color: #10b981;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-text p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .btn-secondary:hover {
+            background: #10b981;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.rides { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.earnings { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.rating { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon.distance { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stat-change.positive {
+            color: #10b981;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .card-action {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .ride-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .ride-item:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .ride-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .ride-info {
+            flex: 1;
+        }
+
+        .ride-route {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .ride-details {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .ride-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .status-active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .status-cancelled {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .map-container {
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.booking { background: #3b82f6; }
+        .notification-icon.message { background: #10b981; }
+        .notification-icon.rating { background: #f59e0b; }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-header {
+                padding: 1.5rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .empty-state p {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <img src="/images/logo.jpg" alt="PoolMate Logo" class="logo-icon">
+                    <span class="brand-name">PoolMate</span>
+                </div>
+                <div class="user-info">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" 
+                         alt="User Avatar" class="user-avatar" id="userAvatar">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-type" id="userType">Loading...</div>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#rides" class="nav-item" data-section="rides">
+                    <i class="fas fa-car"></i>
+                    <span>My Rides</span>
+                </a>
+                <a href="#search" class="nav-item" data-section="search">
+                    <i class="fas fa-search"></i>
+                    <span>Find Rides</span>
+                </a>
+                <a href="#bookings" class="nav-item" data-section="bookings">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Bookings</span>
+                </a>
+                <a href="#messages" class="nav-item" data-section="messages">
+                    <i class="fas fa-comments"></i>
+                    <span>Messages</span>
+                    <span class="badge" id="messagesBadge" style="display: none;"></span>
+                </a>
+                <a href="#profile" class="nav-item" data-section="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#vehicles" class="nav-item driver-only" data-section="vehicles" style="display: none;">
+                    <i class="fas fa-car-side"></i>
+                    <span>My Vehicles</span>
+                </a>
+                <a href="#earnings" class="nav-item driver-only" data-section="earnings" style="display: none;">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Earnings</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div class="header-content">
+                    <div class="welcome-text">
+                        <h1 id="welcomeTitle">Welcome back!</h1>
+                        <p id="welcomeSubtitle">Here's what's happening with your rides today.</p>
+                    </div>
+                    <div class="quick-actions">
+                        <a href="#search" class="btn btn-secondary" data-section="search">
+                            <i class="fas fa-search"></i>
+                            Find Rides
+                        </a>
+                        <a href="#rides" class="btn btn-primary driver-only" data-section="rides" style="display: none;">
+                            <i class="fas fa-plus"></i>
+                            Create Ride
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon rides">
+                            <i class="fas fa-car"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalRides">0</div>
+                    <div class="stat-label">Total Rides</div>
+                    <div class="stat-change positive" id="ridesChange">+0 this month</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon earnings">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalEarnings">$0</div>
+                    <div class="stat-label">Total Savings</div>
+                    <div class="stat-change positive" id="earningsChange">+$0 this month</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon rating">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="userRating">0.0</div>
+                    <div class="stat-label">Your Rating</div>
+                    <div class="stat-change" id="ratingChange">Based on 0 reviews</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon distance">
+                            <i class="fas fa-route"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalDistance">0</div>
+                    <div class="stat-label">Distance (km)</div>
+                    <div class="stat-change positive" id="distanceChange">+0 km this month</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Rides</h3>
+                        <a href="#rides" class="card-action" data-section="rides">View All</a>
+                    </div>
+                    <div id="recentRides">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading recent rides...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">Notifications</h3>
+                        <a href="#" class="card-action">Mark All Read</a>
+                    </div>
+                    <div id="notifications">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading notifications...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">Live Map</h3>
+                    <a href="#map" class="card-action">Full Screen</a>
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let currentUser = null;
+        let socket = null;
+        let map = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuth();
+            initializeSocket();
+            initializeNavigation();
+            initializeMap();
+            loadDashboardData();
+        });
+
+        function initializeAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                currentUser = payload;
+                updateUserInterface();
+            } catch (error) {
+                console.error('Invalid token:', error);
+                logout();
+            }
+        }
+
+        function updateUserInterface() {
+            if (!currentUser) return;
+
+            document.getElementById('userName').textContent = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`;
+            document.getElementById('userType').textContent = currentUser.userType.charAt(0).toUpperCase() + currentUser.userType.slice(1);
+            document.getElementById('welcomeTitle').textContent = `Welcome back, ${currentUser.firstName || 'User'}!`;
+
+            if (currentUser.userType === 'driver') {
+                document.querySelectorAll('.driver-only').forEach(el => {
+                    el.style.display = 'flex';
+                });
+            }
+        }
+
+        function initializeSocket() {
+            socket = io();
+            
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                if (currentUser) {
+                    socket.emit('join_user_room', currentUser.userId);
+                }
+            });
+
+            socket.on('new_booking', (data) => {
+                showNotification('New Booking Request', `${data.riderName} wants to book ${data.seatsBooked} seat(s)`, 'booking');
+                loadDashboardData(); 
+            });
+
+            socket.on('booking_confirmed', (data) => {
+                showNotification('Booking Confirmed', 'Your booking has been confirmed!', 'booking');
+                loadDashboardData();
+            });
+
+            socket.on('new_message', (data) => {
+                updateMessagesBadge();
+                showNotification('New Message', 'You have a new message', 'message');
+            });
+        }
+
+        function initializeNavigation() {
+            document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = item.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+
+            document.querySelectorAll('.quick-actions .btn[data-section]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = btn.dataset.section;
+                    navigateToSection(section);
+                });
+            });
+        }
+
+        function navigateToSection(section) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+            switch (section) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'rides':
+                    loadRidesSection();
+                    break;
+                case 'search':
+                    loadSearchSection();
+                    break;
+                case 'bookings':
+                    loadBookingsSection();
+                    break;
+                case 'messages':
+                    loadMessagesSection();
+                    break;
+                case 'profile':
+                    loadProfileSection();
+                    break;
+                case 'vehicles':
+                    loadVehiclesSection();
+                    break;
+                case 'earnings':
+                    loadEarningsSection();
+                    break;
+            }
+        }
+        function initializeMap() {
+            map = L.map('map').setView([40.7128, -74.0060], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.marker([40.7128, -74.0060]).addTo(map)
+                .bindPopup('Your Location')
+                .openPopup();
+        }
+
+        async function loadDashboardData() {
+            try {
+                const token = localStorage.getItem('authToken');
+                
+                const profileResponse = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    updateStatsCards(profileData.data);
+                }
+
+                loadRecentRides();
+
+                loadNotifications();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        function updateStatsCards(userData) {
+            const stats = userData.stats || {};
+            
+            document.getElementById('totalRides').textContent = stats.totalRides || 0;
+            document.getElementById('totalEarnings').textContent = `$${(stats.totalSavings || 0).toFixed(2)}`;
+            document.getElementById('userRating').textContent = (stats.rating?.average || 0).toFixed(1);
+            document.getElementById('totalDistance').textContent = `${(stats.totalDistance || 0).toFixed(1)}`;
+
+            document.getElementById('ridesChange').textContent = '+2 this month';
+            document.getElementById('earningsChange').textContent = '+$45 this month';
+            document.getElementById('ratingChange').textContent = `Based on ${stats.rating?.count || 0} reviews`;
+            document.getElementById('distanceChange').textContent = '+125 km this month';
+        }
+
+        async function loadRecentRides() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch('/api/rides/my-rides?limit=5', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayRecentRides(data.data);
+                } else {
+                    throw new Error('Failed to load rides');
+                }
+            } catch (error) {
+                console.error('Error loading recent rides:', error);
+                document.getElementById('recentRides').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-car"></i>
+                        <h3>No Recent Rides</h3>
+                        <p>You haven't taken any rides yet.</p>
+                        <a href="#search" class="btn btn-primary" data-section="search">Find Your First Ride</a>
+                    </div>
+                `;
+            }
+        }
+
+        function displayRecentRides(rides) {
+            const container = document.getElementById('recentRides');
+            
+            if (!rides || rides.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-car"></i>
+                        <h3>No Recent Rides</h3>
+                        <p>You haven't taken any rides yet.</p>
+                        <a href="#search" class="btn btn-primary" data-section="search">Find Your First Ride</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = rides.map(ride => `
+                <div class="ride-item">
+                    <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=50&h=50&fit=crop&crop=face" 
+                         alt="User" class="ride-avatar">
+                    <div class="ride-info">
+                        <div class="ride-route">${ride.origin?.address || 'Unknown'} → ${ride.destination?.address || 'Unknown'}</div>
+                        <div class="ride-details">
+                            ${new Date(ride.departureTime).toLocaleDateString()} • 
+                            $${ride.pricePerSeat} per seat • 
+                            ${ride.availableSeats} seats available
+                        </div>
+                    </div>
+                    <span class="ride-status status-${ride.status}">${ride.status}</span>
+                </div>
+            `).join('');
+        }
+
+        async function loadNotifications() {
+            const notifications = [
+                {
+                    type: 'booking',
+                    title: 'New Booking Request',
+                    text: 'John Doe wants to book 2 seats for your ride to Downtown',
+                    time: '5 minutes ago'
+                },
+                {
+                    type: 'message',
+                    title: 'New Message',
+                    text: 'Sarah: "I\'m running 5 minutes late, see you soon!"',
+                    time: '15 minutes ago'
+                },
+                {
+                    type: 'rating',
+                    title: 'New Rating',
+                    text: 'You received a 5-star rating from your last ride',
+                    time: '1 hour ago'
+                }
+            ];
+
+            displayNotifications(notifications);
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notifications');
+            
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell"></i>
+                        <h3>No Notifications</h3>
+                        <p>You're all caught up!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => `
+                <div class="notification-item">
+                    <div class="notification-icon ${notification.type}">
+                        <i class="fas fa-${getNotificationIcon(notification.type)}"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-text">${notification.text}</div>
+                        <div class="notification-time">${notification.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'booking': return 'calendar-check';
+                case 'message': return 'comment';
+                case 'rating': return 'star';
+                default: return 'bell';
+            }
+        }
+        function loadRidesSection() {
+            console.log('Loading rides section...');
+        }
+
+        function loadSearchSection() {
+            console.log('Loading search section...');
+            // Implement search section
+        }
+
+        function loadBookingsSection() {
+            console.log('Loading bookings section...');
+            // Implement bookings section
+        }
+
+        function loadMessagesSection() {
+            console.log('Loading messages section...');
+            // Implement messages section
+        }
+
+        function loadProfileSection() {
+            console.log('Loading profile section...');
+            // Implement profile section
+        }
+
+        function loadVehiclesSection() {
+            console.log('Loading vehicles section...');
+            // Implement vehicles section
+        }
+
+        function loadEarningsSection() {
+            console.log('Loading earnings section...');
+            // Implement earnings section
+        }
+
+        // Utility functions
+        function updateMessagesBadge() {
+            // Update messages badge count
+            const badge = document.getElementById('messagesBadge');
+            // Implement badge update logic
+        }
+
+        function showNotification(title, message, type) {
+            // Show browser notification if permission granted
+            if (Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/images/logo.jpg'
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            if (socket) {
+                socket.disconnect();
+            }
+            window.location.href = '/';
+        }
+
+        // Request notification permission
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+</body>
+</html>
+

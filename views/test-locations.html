@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Test - PoolMate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.success {
+            background-color: #28a745;
+        }
+        button.danger {
+            background-color: #dc3545;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .preset-btn {
+            background-color: #6c757d;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        .preset-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 PoolMate Location Testing Tool</h1>
+        <p>Use this tool to set specific locations for drivers and riders during testing.</p>
+    </div>
+
+    <div class="grid">
+        <div class="container">
+            <h2>🔧 Set Test Locations for Ride</h2>
+            <div class="form-group">
+                <label for="rideId">Ride ID:</label>
+                <input type="text" id="rideId" placeholder="688a3d30572cec98e6c67587">
+            </div>
+            <button onclick="setTestLocations()">📍 Set Test Locations</button>
+            <button onclick="extractIdsFromRide()" class="preset-btn">🔍 Get Driver/Rider IDs</button>
+            <div id="testResult" class="result"></div>
+        </div>
+
+        <div class="container">
+            <h2>🚗 Update Driver Location</h2>
+            <div class="form-group">
+                <label for="driverId">Driver ID:</label>
+                <input type="text" id="driverId" placeholder="Enter driver ID">
+            </div>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setDriverPreset('delhi')">📍 Delhi</button>
+                <button class="preset-btn" onclick="setDriverPreset('mumbai')">📍 Mumbai</button>
+                <button class="preset-btn" onclick="setDriverPreset('bangalore')">📍 Bangalore</button>
+                <button class="preset-btn" onclick="setDriverPreset('hyderabad')">📍 Hyderabad</button>
+            </div>
+            <div class="form-group">
+                <label for="driverLat">Latitude:</label>
+                <input type="number" id="driverLat" step="any" value="28.6139">
+            </div>
+            <div class="form-group">
+                <label for="driverLng">Longitude:</label>
+                <input type="number" id="driverLng" step="any" value="77.2090">
+            </div>
+            <button onclick="updateDriverLocation()">🚗 Update Driver</button>
+            <div id="driverResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="container">
+            <h2>👤 Update Rider Location</h2>
+            <div class="form-group">
+                <label for="riderId">Rider ID:</label>
+                <input type="text" id="riderId" placeholder="Enter rider ID">
+            </div>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setRiderPreset('delhi2')">📍 Delhi 2</button>
+                <button class="preset-btn" onclick="setRiderPreset('mumbai2')">📍 Mumbai 2</button>
+                <button class="preset-btn" onclick="setRiderPreset('bangalore2')">📍 Bangalore 2</button>
+                <button class="preset-btn" onclick="setRiderPreset('hyderabad2')">📍 Hyderabad 2</button>
+            </div>
+            <div class="form-group">
+                <label for="riderLat">Latitude:</label>
+                <input type="number" id="riderLat" step="any" value="28.7041">
+            </div>
+            <div class="form-group">
+                <label for="riderLng">Longitude:</label>
+                <input type="number" id="riderLng" step="any" value="77.1025">
+            </div>
+            <button onclick="updateRiderLocation()">👤 Update Rider</button>
+            <div id="riderResult" class="result"></div>
+        </div>
+
+        <div class="container">
+            <h2>📊 Test Data Retrieval</h2>
+            <div class="form-group">
+                <label for="testRideId">Ride ID to Test:</label>
+                <input type="text" id="testRideId" placeholder="Enter ride ID">
+            </div>
+            <button onclick="testDataRetrieval()">📡 Test Data Retrieval</button>
+            <button onclick="debugRideData()" class="danger">🔍 Debug Database</button>
+            <button onclick="openMap()" class="success">🗺️ Open Map View</button>
+            <div id="retrievalResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Preset locations
+        const presets = {
+            delhi: { lat: 28.6139, lng: 77.2090, name: 'Delhi' },
+            mumbai: { lat: 19.0760, lng: 72.8777, name: 'Mumbai' },
+            bangalore: { lat: 12.9716, lng: 77.5946, name: 'Bangalore' },
+            hyderabad: { lat: 17.3850, lng: 78.4867, name: 'Hyderabad' },
+            delhi2: { lat: 28.7041, lng: 77.1025, name: 'Delhi North' },
+            mumbai2: { lat: 19.0176, lng: 72.8562, name: 'Mumbai Central' },
+            bangalore2: { lat: 12.9351, lng: 77.6245, name: 'Bangalore East' },
+            hyderabad2: { lat: 17.4239, lng: 78.4738, name: 'Hyderabad West' }
+        };
+
+        function setDriverPreset(presetName) {
+            const preset = presets[presetName];
+            document.getElementById('driverLat').value = preset.lat;
+            document.getElementById('driverLng').value = preset.lng;
+        }
+
+        function setRiderPreset(presetName) {
+            const preset = presets[presetName];
+            document.getElementById('riderLat').value = preset.lat;
+            document.getElementById('riderLng').value = preset.lng;
+        }
+
+        async function extractIdsFromRide() {
+            const rideId = document.getElementById('rideId').value;
+            const result = document.getElementById('testResult');
+            
+            if (!rideId) {
+                showResult(result, 'error', 'Please enter a ride ID first');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/debug/ride-data/${rideId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Auto-fill the driver and rider ID fields
+                    document.getElementById('driverId').value = data.rideRequest.driverId;
+                    document.getElementById('riderId').value = data.rideRequest.riderId;
+                    
+                    let message = `✅ IDs extracted and filled:<br>`;
+                    message += `Driver ID: ${data.rideRequest.driverId}<br>`;
+                    message += `Rider ID: ${data.rideRequest.riderId}<br><br>`;
+                    message += `<strong>Current Status:</strong><br>`;
+                    message += `Driver has location: ${data.driver?.currentLocation ? 'YES' : 'NO'}<br>`;
+                    message += `Rider has location: ${data.rider?.currentLocation ? 'NO' : 'NO'}<br>`;
+                    
+                    showResult(result, 'success', message);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function setTestLocations() {
+            const rideId = document.getElementById('rideId').value;
+            const result = document.getElementById('testResult');
+            
+            if (!rideId) {
+                showResult(result, 'error', 'Please enter a ride ID');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/test/set-locations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rideId })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(result, 'success', `✅ ${data.message}<br>Driver: ${data.driverLocation.latitude}, ${data.driverLocation.longitude}<br>Rider: ${data.riderLocation.latitude}, ${data.riderLocation.longitude}`);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function updateDriverLocation() {
+            const driverId = document.getElementById('driverId').value;
+            const latitude = parseFloat(document.getElementById('driverLat').value);
+            const longitude = parseFloat(document.getElementById('driverLng').value);
+            const result = document.getElementById('driverResult');
+            
+            if (!driverId || isNaN(latitude) || isNaN(longitude)) {
+                showResult(result, 'error', 'Please fill all driver fields with valid values');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/public/update-driver-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driverId, latitude, longitude })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(result, 'success', `✅ Driver location updated: ${latitude}, ${longitude}`);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function updateRiderLocation() {
+            const riderId = document.getElementById('riderId').value;
+            const latitude = parseFloat(document.getElementById('riderLat').value);
+            const longitude = parseFloat(document.getElementById('riderLng').value);
+            const result = document.getElementById('riderResult');
+            
+            if (!riderId || isNaN(latitude) || isNaN(longitude)) {
+                showResult(result, 'error', 'Please fill all rider fields with valid values');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/public/update-rider-location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ riderId, latitude, longitude })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(result, 'success', `✅ Rider location updated: ${latitude}, ${longitude}`);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function testDataRetrieval() {
+            const rideId = document.getElementById('testRideId').value;
+            const result = document.getElementById('retrievalResult');
+            
+            if (!rideId) {
+                showResult(result, 'error', 'Please enter a ride ID to test');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/public/ride-locations/${rideId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let message = `✅ Data retrieved successfully<br>`;
+                    if (data.locations?.driverLocation) {
+                        message += `Driver: ${data.locations.driverLocation.latitude}, ${data.locations.driverLocation.longitude}<br>`;
+                    }
+                    if (data.locations?.riderLocation) {
+                        message += `Rider: ${data.locations.riderLocation.latitude}, ${data.locations.riderLocation.longitude}<br>`;
+                    }
+                    showResult(result, 'success', message);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        async function debugRideData() {
+            const rideId = document.getElementById('testRideId').value;
+            const result = document.getElementById('retrievalResult');
+            
+            if (!rideId) {
+                showResult(result, 'error', 'Please enter a ride ID to debug');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/debug/ride-data/${rideId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let message = `🔍 <strong>Database Debug Info:</strong><br><br>`;
+                    message += `<strong>Ride Request:</strong><br>`;
+                    message += `- ID: ${data.rideRequest.id}<br>`;
+                    message += `- Driver ID: ${data.rideRequest.driverId}<br>`;
+                    message += `- Rider ID: ${data.rideRequest.riderId}<br>`;
+                    message += `- Status: ${data.rideRequest.status}<br><br>`;
+                    
+                    if (data.driver) {
+                        message += `<strong>Driver Data:</strong><br>`;
+                        message += `- Name: ${data.driver.name}<br>`;
+                        message += `- Has Location: ${data.driver.currentLocation ? 'YES' : 'NO'}<br>`;
+                        if (data.driver.currentLocation) {
+                            message += `- Lat: ${data.driver.currentLocation.latitude}<br>`;
+                            message += `- Lng: ${data.driver.currentLocation.longitude}<br>`;
+                        }
+                    } else {
+                        message += `<strong>Driver:</strong> NOT FOUND<br>`;
+                    }
+                    
+                    message += `<br>`;
+                    
+                    if (data.rider) {
+                        message += `<strong>Rider Data:</strong><br>`;
+                        message += `- Name: ${data.rider.name}<br>`;
+                        message += `- Has Location: ${data.rider.currentLocation ? 'YES' : 'NO'}<br>`;
+                        if (data.rider.currentLocation) {
+                            message += `- Lat: ${data.rider.currentLocation.latitude}<br>`;
+                            message += `- Lng: ${data.rider.currentLocation.longitude}<br>`;
+                        }
+                    } else {
+                        message += `<strong>Rider:</strong> NOT FOUND<br>`;
+                    }
+                    
+                    showResult(result, 'info', message);
+                } else {
+                    showResult(result, 'error', `❌ ${data.error}`);
+                }
+            } catch (error) {
+                showResult(result, 'error', `❌ Network error: ${error.message}`);
+            }
+        }
+
+        function openMap() {
+            const rideId = document.getElementById('testRideId').value;
+            if (rideId) {
+                window.open(`/map?rideId=${rideId}`, '_blank');
+            } else {
+                alert('Please enter a ride ID first');
+            }
+        }
+
+        function showResult(element, type, message) {
+            element.className = `result ${type}`;
+            element.innerHTML = message;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

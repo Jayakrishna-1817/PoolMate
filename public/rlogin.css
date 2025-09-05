@@ -1,0 +1,185 @@
+body {
+      background-color: #4F959D;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .overall {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      background-color: #f5e3e3;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    img {
+      width: 300px;
+      height: 300px;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+
+    .container {
+      border: 3px solid #000;
+      width: 320px;
+      text-align: center;
+      padding: 20px;
+      border-radius: 15px;
+      background-color: #fff;
+    }
+
+    input {
+      width: 85%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      border-radius: 40px;
+      width: 100px;
+      height: 40px;
+      background-color: #eab058;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      transition: 0.3s;
+      background-color: #f7713c;
+      color: #fff;
+      border: 1px solid black;
+    }
+
+    p, .forgot {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .forgot {
+      color: #0073e6;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .toast {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+    .social-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .social-buttons button {
+      width: 85%;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .google { background-color: #db4437; }
+    .linkedin { background-color: #0077b5; }
+    .facebook { background-color: #4267B2; }
+
+    .social-buttons button:hover {
+      opacity: 0.9;
+      transform: scale(1.03);
+      transition: 0.2s;
+    }
+
+    .social-buttons img {
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
+    }
+
+    span {
+      text-decoration: underline;
+      cursor: pointer;
+      color: blue;
+    }
+
+    .row {
+      display: flex;
+      margin-left: 20px;
+      gap: 10px;
+    }
+
+    /* Modal Common */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px #000;
+    }
+
+    .modal-content input {
+      width: 90%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+
+    .modal-content button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background-color: #eab058;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal-content button:hover {
+      background-color: #f7713c;
+      color: #fff;
+    }
+
+    .close-btn {
+      background-color: #ccc;
+      margin-left: 10px;
+    }

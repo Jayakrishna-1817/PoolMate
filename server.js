@@ -112,13 +112,18 @@ server.use(session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: MONGODB_URI,
-    touchAfter: 24 * 3600 
+    touchAfter: 24 * 3600, // lazy session update
+    ttl: 60 * 60 * 24 * 7, // 7 days TTL (in seconds, not milliseconds)
+    autoRemove: 'native' // Let MongoDB handle TTL cleanup
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    secure: false, // Set to false for both development and production initially
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7 
-  }
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days (in milliseconds)
+    sameSite: 'lax' // Help with CSRF protection while allowing same-site requests
+  },
+  name: 'poolmate-session', // Custom session name
+  rolling: true // Reset the cookie expiration on each request
 }));
 
 server.use(express.static(path.join(__dirname, "public")));
@@ -127,17 +132,33 @@ server.use(express.json());
 server.use(express.urlencoded({ extended: true }));
 
 const requireAuth = (req, res, next) => {
+  console.log('RequireAuth check:', {
+    sessionExists: !!req.session,
+    riderId: req.session?.riderId,
+    sessionId: req.sessionID,
+    cookies: req.headers.cookie
+  });
+  
   if (req.session && req.session.riderId) {
     return next();
   } else {
+    console.log('Authentication failed - no valid riderId in session');
     return res.status(401).json({ error: "Authentication required" });
   }
 };
 
 const requireDriverAuth = (req, res, next) => {
+  console.log('RequireDriverAuth check:', {
+    sessionExists: !!req.session,
+    driverId: req.session?.driverId,
+    sessionId: req.sessionID,
+    cookies: req.headers.cookie
+  });
+  
   if (req.session && req.session.driverId) {
     return next();
   } else {
+    console.log('Driver authentication failed - no valid driverId in session');
     return res.status(401).json({ error: "Driver authentication required" });
   }
 };
@@ -524,6 +545,7 @@ server.post("/api/rsignup", async (req, res) => {
 server.post("/api/rlogin", async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Rider login attempt:', { email, sessionId: req.sessionID });
 
     const rider = await Rider.findOne({ email });
     if (!rider) {
@@ -537,15 +559,33 @@ server.post("/api/rlogin", async (req, res) => {
 
     req.session.riderId = rider._id;
     req.session.userType = 'rider';
+    
+    console.log('Before session save:', {
+      riderId: req.session.riderId,
+      sessionId: req.sessionID
+    });
 
-    res.status(200).json({
-      message: "Login successful",
-      rider: {
-        id: rider._id,
-        name: `${rider.firstName} ${rider.lastName}`,
-        email: rider.email,
-        city: rider.city,
-      },
+    // Ensure session is saved before sending response
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ message: "Login failed due to session error" });
+      }
+
+      console.log('Session saved successfully:', {
+        riderId: req.session.riderId,
+        sessionId: req.sessionID
+      });
+
+      res.status(200).json({
+        message: "Login successful",
+        rider: {
+          id: rider._id,
+          name: `${rider.firstName} ${rider.lastName}`,
+          email: rider.email,
+          city: rider.city,
+        },
+      });
     });
   } catch (error) {
     console.error("Rider login error:", error);
@@ -629,16 +669,24 @@ server.post("/api/driver-login", async (req, res) => {
     req.session.driverId = driver._id;
     req.session.userType = 'driver';
 
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      driver: {
-        id: driver._id,
-        name: driver.firstName + " " + driver.lastName,
-        email: driver.email,
-        phone: driver.phone,
-        city: driver.city
+    // Ensure session is saved before sending response
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ message: "Login failed due to session error" });
       }
+
+      res.status(200).json({
+        success: true,
+        message: "Login successful",
+        driver: {
+          id: driver._id,
+          name: driver.firstName + " " + driver.lastName,
+          email: driver.email,
+          phone: driver.phone,
+          city: driver.city
+        }
+      });
     });
 
   } catch (err) {

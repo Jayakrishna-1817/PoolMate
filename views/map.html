@@ -627,59 +627,50 @@
             console.log('🚗 Driver location received:', driverLocation);
             console.log('👤 Rider location received:', riderLocation);
             
-            // Validate that locations are actually different
-            if (driverLocation && riderLocation) {
-                const driverCoords = `${driverLocation.latitude},${driverLocation.longitude}`;
-                const riderCoords = `${riderLocation.latitude},${riderLocation.longitude}`;
-                
-                if (driverCoords === riderCoords) {
-                    console.warn('⚠️ WARNING: Driver and rider have identical coordinates!');
-                    console.warn('⚠️ This will cause overlapping markers');
-                    
-                    // Force different coordinates for rider if they're the same
-                    riderLocation = {
-                        ...riderLocation,
-                        latitude: riderLocation.latitude + 0.01, // Offset by ~1km
-                        longitude: riderLocation.longitude + 0.01
-                    };
-                    console.log('🔧 Adjusted rider location to:', riderLocation);
-                } else {
-                    console.log('✅ Locations are different - good!');
-                    console.log(`🚗 Driver: ${driverCoords}`);
-                    console.log(`👤 Rider: ${riderCoords}`);
-                }
+            // Clear existing markers first to prevent duplicates
+            if (driverMarker) {
+                map.removeLayer(driverMarker);
+                driverMarker = null;
+            }
+            if (riderMarker) {
+                map.removeLayer(riderMarker);
+                riderMarker = null;
+            }
+            if (pickupMarker) {
+                map.removeLayer(pickupMarker);
+                pickupMarker = null;
+            }
+            if (destinationMarker) {
+                map.removeLayer(destinationMarker);
+                destinationMarker = null;
+            }
+            if (otherPartyMarker) {
+                map.removeLayer(otherPartyMarker);
+                otherPartyMarker = null;
+            }
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
             }
             
             let markersAdded = false;
             
-            // Handle driver location
+            // Handle driver location - only use real data
             if (driverLocation && driverLocation.latitude && driverLocation.longitude) {
                 console.log('✓ Adding driver marker (blue)');
                 updateDriverLocation(driverLocation);
                 markersAdded = true;
             } else {
                 console.warn('⚠️ Driver location is invalid or missing:', driverLocation);
-                // Try to get from global rideData if available
-                if (window.currentRideData?.driver?.currentLocation) {
-                    console.log('🔄 Using driver location from global data');
-                    updateDriverLocation(window.currentRideData.driver.currentLocation);
-                    markersAdded = true;
-                }
             }
             
-            // Handle rider location
+            // Handle rider location - only use real data
             if (riderLocation && riderLocation.latitude && riderLocation.longitude) {
                 console.log('✓ Adding rider marker (green)');
                 updateRiderLocation(riderLocation);
                 markersAdded = true;
             } else {
                 console.warn('⚠️ Rider location is invalid or missing:', riderLocation);
-                // Try to get from global rideData if available
-                if (window.currentRideData?.rider?.currentLocation) {
-                    console.log('🔄 Using rider location from global data');
-                    updateRiderLocation(window.currentRideData.rider.currentLocation);
-                    markersAdded = true;
-                }
             }
             
             // Calculate and display distance if both locations are available
@@ -983,7 +974,24 @@
                 L.marker([driverLocation.latitude, driverLocation.longitude]),
                 L.marker([riderLocation.latitude, riderLocation.longitude])
             ]);
-            map.fitBounds(group.getBounds().pad(0.1));
+            
+            // Calculate distance between points
+            const distance = calculateDistance(
+                driverLocation.latitude, driverLocation.longitude,
+                riderLocation.latitude, riderLocation.longitude
+            );
+            
+            // If locations are very close (< 1km), set a minimum zoom level
+            if (distance < 1) {
+                const centerLat = (driverLocation.latitude + riderLocation.latitude) / 2;
+                const centerLng = (driverLocation.longitude + riderLocation.longitude) / 2;
+                map.setView([centerLat, centerLng], 15); // Zoom level 15 for close locations
+                console.log(`📍 Close locations (${distance.toFixed(2)}km) - using zoom level 15`);
+            } else {
+                // For distant locations, fit bounds with padding
+                map.fitBounds(group.getBounds().pad(0.1));
+                console.log(`📍 Distant locations (${distance.toFixed(2)}km) - fitting bounds`);
+            }
         }
 
         function startLocationPolling() {
@@ -1260,8 +1268,8 @@
                     // Function to try endpoints sequentially
                     function tryEndpoints(endpointIndex = 0) {
                         if (endpointIndex >= endpoints.length) {
-                            console.log('📋 No real data available, showing demo locations');
-                            showDemoLocations();
+                            console.log('📋 No real data available - waiting for real locations');
+                            // showDemoLocations(); // Disabled - only show real locations
                             return;
                         }
                         
@@ -1372,10 +1380,10 @@
                 displayRideOnMap(demoData);
                 updateRideInfo(demoData);
                 
-                // Display demo locations immediately
+                // Display real locations only - no demo data
                 if (demoData.driver.currentLocation && demoData.rider.currentLocation) {
-                    console.log('📍 Displaying demo locations');
-                    displayBothLocations(demoData.driver.currentLocation, demoData.rider.currentLocation);
+                    console.log('📍 Demo data available but disabled - use real locations only');
+                    // displayBothLocations(demoData.driver.currentLocation, demoData.rider.currentLocation); // Disabled
                 }
             }
         }

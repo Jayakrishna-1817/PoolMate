@@ -373,8 +373,12 @@
             
             document.body.appendChild(testButton);
             
-            // Set up button handlers
-            document.getElementById('allowLocation').addEventListener('click', startLocationTracking);
+            // Set up button handlers (disabled for ride view)
+            document.getElementById('allowLocation').addEventListener('click', () => {
+                document.getElementById('locationPermission').style.display = 'none';
+                // Don't start location tracking, just load ride data
+                loadRideData();
+            });
             document.getElementById('denyLocation').addEventListener('click', () => {
                 document.getElementById('locationPermission').style.display = 'none';
                 loadRideData();
@@ -392,23 +396,9 @@
         }
 
         function checkLocationPermission() {
-            if (navigator.permissions) {
-                navigator.permissions.query({name: 'geolocation'}).then(function(result) {
-                    if (result.state === 'granted') {
-                        startLocationTracking();
-                        document.getElementById('locationPermission').style.display = 'none';
-                    } else if (result.state === 'prompt') {
-                        // Show permission prompt
-                        document.getElementById('locationPermission').style.display = 'block';
-                    } else {
-                        // Permission denied
-                        document.getElementById('locationPermission').style.display = 'none';
-                    }
-                });
-            } else {
-                // Older browsers
-                document.getElementById('locationPermission').style.display = 'block';
-            }
+            // Skip location permission for ride view - just load ride data
+            document.getElementById('locationPermission').style.display = 'none';
+            loadRideData();
         }
 
         function setupSocketConnection() {
@@ -510,33 +500,10 @@
     }
 
         function startLocationTracking() {
+            // Disabled for ride view - only show ride data locations
+            console.log('📍 Location tracking disabled for ride view');
             document.getElementById('locationPermission').style.display = 'none';
-            isLocationEnabled = true;
-            
-            // Get initial position
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => updateUserPosition(position),
-                    error => handleLocationError(error),
-                    { enableHighAccuracy: true }
-                );
-
-                // Watch for position updates
-                watchId = navigator.geolocation.watchPosition(
-                    position => updateUserPosition(position),
-                    error => handleLocationError(error),
-                    { 
-                        enableHighAccuracy: true, 
-                        maximumAge: 10000, 
-                        timeout: 5000 
-                    }
-                );
-
-                // Start periodic updates to server
-                locationInterval = setInterval(sendLocationToServer, 5000);
-            } else {
-                alert("Geolocation is not supported by this browser.");
-            }
+            loadRideData();
         }
 
         function stopLocationTracking() {
@@ -550,6 +517,10 @@
         }
 
         function updateUserPosition(position) {
+            // Disabled for ride view - no live user tracking
+            console.log('📍 User position tracking disabled for ride view');
+            return;
+            
             const { latitude, longitude } = position.coords;
             
             // Update coordinates display

@@ -1,4 +1,4 @@
-// Load environment variables
+
 require('dotenv').config();
 
 const nodemailer = require("nodemailer");
@@ -31,26 +31,22 @@ const io = socketIo(httpServer, {
   }
 });
 
-// Socket.io connection handling
 io.on('connection', (socket) => {
   console.log('📡 User connected:', socket.id);
   
-  // Join ride room for real-time updates
+
   socket.on('join-ride', (rideId) => {
     socket.join(`ride_${rideId}`);
     console.log(`👥 User ${socket.id} joined ride room: ride_${rideId}`);
   });
   
-  // Handle location updates
   socket.on('location-update', (data) => {
     console.log('📍 Location update received:', data);
-    // Broadcast to all users in the same ride room
     if (data.rideId) {
       socket.to(`ride_${data.rideId}`).emit('location-updated', data);
     }
   });
   
-  // Handle disconnection
   socket.on('disconnect', () => {
     console.log('📡 User disconnected:', socket.id);
   });
@@ -62,11 +58,9 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const RiderProfile = require("./models/Riderprofile");
 
-// Use environment variables for configuration
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://jk:Jkkohli1817@book.n9xsdxj.mongodb.net/poolmate?retryWrites=true&w=majority&appName=Book";
 
-// Enhanced MongoDB connection with retry logic
 const connectDB = async () => {
   try {
     await mongoose.connect(MONGODB_URI, {
@@ -86,18 +80,15 @@ const connectDB = async () => {
       console.log("   2. Your IP address is whitelisted in Network Access");
       console.log("   3. Username and password are correct");
     }
-    
-    // Don't exit in production, continue with limited functionality
+
     if (process.env.NODE_ENV !== 'production') {
       process.exit(1);
     }
   }
 };
 
-// Connect to MongoDB
 connectDB();
 
-// Email configuration
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -112,18 +103,18 @@ server.use(session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: MONGODB_URI,
-    touchAfter: 24 * 3600, // lazy session update
-    ttl: 60 * 60 * 24 * 7, // 7 days TTL (in seconds, not milliseconds)
-    autoRemove: 'native' // Let MongoDB handle TTL cleanup
+    touchAfter: 24 * 3600, 
+    ttl: 60 * 60 * 24 * 7, 
+    autoRemove: 'native' 
   }),
   cookie: {
-    secure: false, // Set to false for both development and production initially
+    secure: false,
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days (in milliseconds)
-    sameSite: 'lax' // Help with CSRF protection while allowing same-site requests
+    maxAge: 1000 * 60 * 60 * 24 * 7, 
+    sameSite: 'lax' 
   },
-  name: 'poolmate-session', // Custom session name
-  rolling: true // Reset the cookie expiration on each request
+  name: 'poolmate-session', 
+  rolling: true 
 }));
 
 server.use(express.static(path.join(__dirname, "public")));
@@ -669,7 +660,6 @@ server.post("/api/driver-login", async (req, res) => {
     req.session.driverId = driver._id;
     req.session.userType = 'driver';
 
-    // Ensure session is saved before sending response
     req.session.save((err) => {
       if (err) {
         console.error('Session save error:', err);
@@ -743,7 +733,6 @@ server.post("/api/driver-reset-password", async (req, res) => {
   res.json({ message: "Password updated successfully" });
 });
 
-// Rider password reset endpoints
 server.post("/api/rider-send-otp", async (req, res) => {
   try {
     const { email } = req.body;
@@ -784,7 +773,6 @@ server.post("/api/rider-reset-password", async (req, res) => {
   }
 });
 
-// Test email endpoint to verify nodemailer configuration
 server.post("/api/test-email", async (req, res) => {
   try {
     const { email } = req.body;
@@ -796,7 +784,6 @@ server.post("/api/test-email", async (req, res) => {
     console.log('🧪 Testing email configuration...');
     console.log('Target email:', email);
 
-    // Test the transporter connection
     await transporter.verify();
     console.log('✅ SMTP connection verified successfully');
 
@@ -972,7 +959,7 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
       destination, 
       riderNotes, 
       estimatedFare,
-      riderCurrentLocation // Add this to capture rider's current location
+      riderCurrentLocation 
     } = req.body;
 
     if (!driverId || !pickup || !destination) {
@@ -984,7 +971,6 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Driver not found" });
     }
 
-    // Update rider's current location if provided
     if (riderCurrentLocation && riderCurrentLocation.latitude && riderCurrentLocation.longitude) {
       await Rider.findByIdAndUpdate(riderId, {
         $set: {
@@ -1012,14 +998,12 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
 
     await rideRequest.save();
 
-    // Get rider information for email
     const rider = await Rider.findById(riderId, 'firstName lastName phone email');
     
     console.log('📧 Preparing to send email notification...');
     console.log('Driver details:', { id: driver._id, email: driver.email, name: `${driver.firstName} ${driver.lastName}` });
     console.log('Rider details:', { id: rider._id, email: rider.email, name: `${rider.firstName} ${rider.lastName}` });
 
-    // Send email notification to driver
     if (driver.email) {
       try {
         console.log(`📤 Attempting to send email to driver: ${driver.email}`);
@@ -1120,7 +1104,6 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
           subject: mailOptions.subject
         });
 
-        // Send the email using the fresh transporter
         const info = await transporter.sendMail(mailOptions);
         console.log(`✅ Email notification sent successfully!`);
         console.log('📧 Message info:', {
@@ -1136,8 +1119,7 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
         console.error("Error message:", emailError.message);
         console.error("Error code:", emailError.code);
         console.error("Full error:", emailError);
-        
-        // Check specific error types
+
         if (emailError.code === 'EAUTH') {
           console.error("🔐 Authentication failed - check Gmail credentials");
         } else if (emailError.code === 'ENOTFOUND') {
@@ -1145,8 +1127,7 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
         } else if (emailError.code === 'ETIMEDOUT') {
           console.error("⏰ Timeout error - Gmail server might be slow");
         }
-        
-        // Don't fail the request if email fails
+
       }
     } else {
       console.log(`⚠️ No email found for driver ${driverId}, skipping email notification`);
@@ -1177,7 +1158,6 @@ server.post("/api/ride-requests", requireAuth, async (req, res) => {
   }
 });
 
-// FIXED: Accept ride request endpoint with proper error handling
 server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -1186,33 +1166,28 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
 
     console.log(`Driver ${driverId} attempting to accept request ${requestId}`);
 
-    // Find the ride request
     const rideRequest = await RideRequest.findById(requestId);
     if (!rideRequest) {
       console.log(`Ride request ${requestId} not found`);
       return res.status(404).json({ error: "Ride request not found" });
     }
 
-    // Check if request is still pending
     if (rideRequest.status !== 'pending') {
       console.log(`Request ${requestId} is no longer pending, current status: ${rideRequest.status}`);
       return res.status(400).json({ error: "Request is no longer pending" });
     }
 
-    // Verify the driver is the intended recipient
     if (rideRequest.driverId.toString() !== driverId.toString()) {
       console.log(`Driver ${driverId} is not authorized to accept request ${requestId}`);
       return res.status(403).json({ error: "Not authorized to accept this request" });
     }
 
-    // Get driver information
     const driver = await Driver.findById(driverId);
     if (!driver) {
       console.log(`Driver ${driverId} not found in database`);
       return res.status(404).json({ error: "Driver not found" });
     }
 
-    // Update driver location if provided
     if (driverLocation && driverLocation.latitude && driverLocation.longitude) {
       const lat = parseFloat(driverLocation.latitude);
       const lng = parseFloat(driverLocation.longitude);
@@ -1231,7 +1206,6 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       }
     }
 
-    // Update the ride request status
     rideRequest.status = "accepted";
     rideRequest.driverNotes = driverNotes || "Request accepted";
     rideRequest.estimatedArrival = estimatedArrival || new Date(Date.now() + 15 * 60000);
@@ -1240,10 +1214,8 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
 
     console.log(`Ride request ${requestId} successfully accepted`);
 
-    // Get updated driver with current location
     const updatedDriver = await Driver.findById(driverId);
-    
-    // Create active ride record
+
     try {
       const activeRide = new ActiveRide({
         rideRequestId: requestId,
@@ -1261,13 +1233,10 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       console.log(`Active ride created with ID: ${activeRide._id}`);
     } catch (activeRideError) {
       console.error("Error creating active ride:", activeRideError);
-      // Don't fail the request acceptance if active ride creation fails
     }
 
-    // Get rider information with current location for response
     const rider = await Rider.findById(rideRequest.riderId, 'firstName lastName phone currentLocation');
 
-    // Prepare response with location data
     const responseData = {
       success: true,
       rideId: requestId,
@@ -1279,7 +1248,6 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       } : null
     };
 
-    // Add REAL driver location if available
     if (updatedDriver.currentLocation && updatedDriver.currentLocation.latitude && updatedDriver.currentLocation.longitude) {
       responseData.driverLocation = {
         latitude: updatedDriver.currentLocation.latitude,
@@ -1289,7 +1257,6 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       };
       console.log(`Using real driver location: [${updatedDriver.currentLocation.latitude}, ${updatedDriver.currentLocation.longitude}]`);
     } else {
-      // Fallback to default location if no real location available
       responseData.driverLocation = {
         latitude: 17.3850,
         longitude: 78.4867,
@@ -1299,7 +1266,6 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       console.log("Using default driver location - no real location available");
     }
 
-    // Add REAL rider location if available
     if (rider && rider.currentLocation && rider.currentLocation.latitude && rider.currentLocation.longitude) {
       responseData.riderLocation = {
         latitude: rider.currentLocation.latitude,
@@ -1309,7 +1275,7 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       };
       console.log(`Using real rider location: [${rider.currentLocation.latitude}, ${rider.currentLocation.longitude}]`);
     } else if (rideRequest.pickup && rideRequest.pickup.coordinates && Array.isArray(rideRequest.pickup.coordinates)) {
-      // Use pickup coordinates if rider's current location is not available
+
       responseData.riderLocation = {
         latitude: rideRequest.pickup.coordinates[1],
         longitude: rideRequest.pickup.coordinates[0],
@@ -1318,7 +1284,7 @@ server.put("/api/ride-requests/:requestId/accept", requireDriverAuth, async (req
       };
       console.log(`Using pickup coordinates: [${rideRequest.pickup.coordinates[1]}, ${rideRequest.pickup.coordinates[0]}]`);
     } else {
-      // Fallback to default location
+
       responseData.riderLocation = {
         latitude: 17.3850 + (Math.random() - 0.5) * 0.1,
         longitude: 78.4867 + (Math.random() - 0.5) * 0.1,
@@ -1497,7 +1463,7 @@ server.post("/api/search-rides", requireAuth, async (req, res) => {
 
     console.log("Searching for all drivers with their actual online/offline status...");
 
-    // Fetch all drivers with their availability status
+
     const allDrivers = await Driver.find({});
     
     console.log(`Found ${allDrivers.length} total drivers in database`);
@@ -1513,7 +1479,7 @@ server.post("/api/search-rides", requireAuth, async (req, res) => {
     );
 
     const rides = driversWithProfiles.map(({ driver, profile }) => {
-      // Get actual online status from driver's availability field
+
       const isOnline = driver.availability?.isAvailable || false;
 
       return {
@@ -1541,7 +1507,7 @@ server.post("/api/search-rides", requireAuth, async (req, res) => {
         city: driver.city,
         status: "available",
         isOnline: isOnline,
-        canAcceptRequests: isOnline // Only online drivers can accept requests
+        canAcceptRequests: isOnline 
       };
     });
 
@@ -1552,7 +1518,7 @@ server.post("/api/search-rides", requireAuth, async (req, res) => {
 
     res.json({
       success: true,
-      rides: rides, // Return all drivers
+      rides: rides, 
       totalFound: rides.length,
       onlineDrivers: onlineDrivers.length,
       offlineDrivers: offlineDrivers.length,
@@ -1585,7 +1551,6 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Driver ID is required" });
     }
 
-    // Validate required fields
     if (!from || !to || !date || !time) {
       console.log("Missing fields:", { from: !!from, to: !!to, date: !!date, time: !!time });
       return res.status(400).json({ error: "Missing required fields: from, to, date, time" });
@@ -1598,38 +1563,32 @@ server.post("/api/send-connection-request", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Rider or driver not found" });
     }
 
-    // Generate mock coordinates for now (will be replaced with real geocoding later)
     const generateMockCoordinates = (address) => {
       const lat = 8.0 + Math.random() * 29.0; 
       const lng = 68.0 + Math.random() * 29.0; 
       return [lng, lat]; 
     };
 
-    // Use real pickup coordinates if available, otherwise generate mock ones
     const pickupCoords = rider.currentLocation && rider.currentLocation.latitude ? 
       [rider.currentLocation.longitude, rider.currentLocation.latitude] : 
       generateMockCoordinates(from);
-    
-    // Generate destination coordinates (will be updated with real location later)
+
     const destinationCoords = generateMockCoordinates(to);
-    
-    // Safely parse passengers with fallback
+
     let passengerCount = passengers ? parseInt(passengers) : 1;
     if (isNaN(passengerCount) || passengerCount < 1) {
       passengerCount = 1;
     }
-    
-    // Create a proper date object with more flexible parsing
+
     let requestedDate;
     try {
-      // Try different date formats
+
       if (time && time.includes(':')) {
         requestedDate = new Date(`${date}T${time}`);
       } else {
         requestedDate = new Date(`${date} ${time}`);
       }
-      
-      // If still invalid, try with current time
+
       if (isNaN(requestedDate.getTime())) {
         requestedDate = new Date(date);
         if (isNaN(requestedDate.getTime())) {
@@ -1917,20 +1876,18 @@ server.put("/api/driver-status", requireDriverAuth, async (req, res) => {
       'availability.lastUpdated': new Date()
     };
 
-    // Update both individual lat/lng fields AND GeoJSON coordinates
     if (latitude !== undefined && longitude !== undefined) {
       const lat = parseFloat(latitude);
       const lng = parseFloat(longitude);
-      
-      // Validate that the parsed values are valid numbers
+
       if (isNaN(lat) || isNaN(lng)) {
         return res.status(400).json({ error: "Invalid latitude or longitude values" });
       }
       
       updateData['currentLocation.latitude'] = lat;
       updateData['currentLocation.longitude'] = lng;
-      updateData['currentLocation.coordinates'] = [lng, lat]; // GeoJSON format: [longitude, latitude]
-      updateData['currentLocation.type'] = 'Point'; // Ensure GeoJSON type is set
+      updateData['currentLocation.coordinates'] = [lng, lat]; 
+      updateData['currentLocation.type'] = 'Point'; 
       updateData['currentLocation.lastUpdated'] = new Date();
     }
 
@@ -1972,7 +1929,6 @@ server.get("/api/driver-status", requireDriverAuth, async (req, res) => {
       return res.status(404).json({ error: "Driver not found" });
     }
 
-    // Ensure location data is properly structured
     let locationData = {};
     if (driver.currentLocation) {
       locationData = {
@@ -2007,14 +1963,13 @@ server.post("/api/update-location", requireAuth, async (req, res) => {
       userType: req.session.userType
     });
 
-    // Check if req.body exists and has required fields
     if (!req.body || typeof req.body !== 'object') {
       return res.status(400).json({ error: "Invalid request body" });
     }
 
     const { latitude, longitude } = req.body;
     const userId = req.session.riderId || req.session.driverId;
-    const userType = req.session.userType; // 'rider' or 'driver'
+    const userType = req.session.userType; 
 
     if (!latitude || !longitude) {
       return res.status(400).json({ 
@@ -2023,7 +1978,7 @@ server.post("/api/update-location", requireAuth, async (req, res) => {
       });
     }
 
-    // Validate coordinates
+
     const lat = parseFloat(latitude);
     const lng = parseFloat(longitude);
     
@@ -2095,7 +2050,7 @@ server.get("/api/current-location", requireAuth, async (req, res) => {
   }
 });
 
-// Add this new endpoint to get current locations for both rider and driver during active rides
+
 server.get("/api/ride-locations/:requestId", requireAuth, async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -2105,14 +2060,13 @@ server.get("/api/ride-locations/:requestId", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Ride request not found" });
     }
 
-    // Get current driver location
     const driver = await Driver.findById(rideRequest.driverId, 'currentLocation firstName lastName');
-    // Get current rider location  
+
     const rider = await Rider.findById(rideRequest.riderId, 'currentLocation firstName lastName');
 
     const locationData = {};
 
-    // Driver location
+
     if (driver && driver.currentLocation && driver.currentLocation.latitude && driver.currentLocation.longitude) {
       locationData.driverLocation = {
         latitude: driver.currentLocation.latitude,
@@ -2123,7 +2077,6 @@ server.get("/api/ride-locations/:requestId", requireAuth, async (req, res) => {
       };
     }
 
-    // Rider location
     if (rider && rider.currentLocation && rider.currentLocation.latitude && rider.currentLocation.longitude) {
       locationData.riderLocation = {
         latitude: rider.currentLocation.latitude,
@@ -2134,7 +2087,6 @@ server.get("/api/ride-locations/:requestId", requireAuth, async (req, res) => {
       };
     }
 
-    // Include ride request details for UI updates
     const rideDetails = {
       driver: {
         firstName: driver?.firstName || 'Unknown',
@@ -2161,28 +2113,27 @@ server.get("/api/ride-locations/:requestId", requireAuth, async (req, res) => {
   }
 });
 
-// Public endpoint for ride locations (for map access without authentication)
 server.get("/api/public/ride-locations/:requestId", async (req, res) => {
   try {
     const { requestId } = req.params;
-    console.log('🌐 Public ride locations request for:', requestId);
+    console.log(' Public ride locations request for:', requestId);
     
     const rideRequest = await RideRequest.findById(requestId);
     if (!rideRequest) {
-      console.warn('❌ Ride request not found:', requestId);
+      console.warn(' Ride request not found:', requestId);
       return res.status(404).json({ error: "Ride request not found" });
     }
 
-    console.log('✅ Found ride request:', {
+    console.log(' Found ride request:', {
       id: rideRequest._id,
       status: rideRequest.status,
       driverId: rideRequest.driverId,
       riderId: rideRequest.riderId
     });
 
-    // Get current driver location
+
     const driver = await Driver.findById(rideRequest.driverId, 'currentLocation firstName lastName');
-    // Get current rider location  
+
     const rider = await Rider.findById(rideRequest.riderId, 'currentLocation firstName lastName');
 
     console.log('📍 Driver data:', driver ? {
@@ -2205,7 +2156,6 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
 
     const locationData = {};
 
-    // Only show driver location if it exists and is real
     if (driver && driver.currentLocation && driver.currentLocation.latitude && driver.currentLocation.longitude) {
       locationData.driverLocation = {
         latitude: driver.currentLocation.latitude,
@@ -2233,7 +2183,6 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
       console.log('⚠️ No real rider location available');
     }
 
-    // Include ride request details for UI updates
     const rideDetails = {
       driver: {
         firstName: driver?.firstName || 'Driver',
@@ -2268,7 +2217,6 @@ server.get("/api/public/ride-locations/:requestId", async (req, res) => {
   }
 });
 
-// Test endpoint to verify data structure
 server.get("/api/test/ride-data", (req, res) => {
   console.log('🧪 Test ride data endpoint called');
   
@@ -2283,7 +2231,7 @@ server.get("/api/test/ride-data", (req, res) => {
         type: 'driver'
       },
       riderLocation: {
-        latitude: 28.6289, // Clearly different location
+        latitude: 28.6289, 
         longitude: 77.2167,
         name: 'Test Rider',
         lastUpdated: new Date().toISOString(),
@@ -2311,7 +2259,6 @@ server.get("/api/test/ride-data", (req, res) => {
   res.json(testRideData);
 });
 
-// Public endpoint to update rider location (for testing without authentication)
 server.post("/api/public/update-rider-location", async (req, res) => {
   try {
     const { riderId, latitude, longitude } = req.body;
@@ -2322,7 +2269,6 @@ server.post("/api/public/update-rider-location", async (req, res) => {
       return res.status(400).json({ error: "riderId, latitude and longitude are required" });
     }
 
-    // Force update with proper structure
     const updateData = {
       'currentLocation.type': 'Point',
       'currentLocation.coordinates': [longitude, latitude],
@@ -2338,8 +2284,8 @@ server.post("/api/public/update-rider-location", async (req, res) => {
       { $set: updateData },
       { 
         new: true, 
-        runValidators: false, // Skip validation to allow schema updates
-        strict: false // Allow fields not in schema
+        runValidators: false, 
+        strict: false 
       }
     );
 
@@ -2368,7 +2314,7 @@ server.post("/api/public/update-rider-location", async (req, res) => {
   }
 });
 
-// Public endpoint to update driver location (for testing without authentication)
+
 server.post("/api/public/update-driver-location", async (req, res) => {
   try {
     const { driverId, latitude, longitude } = req.body;
@@ -2411,21 +2357,18 @@ server.post("/api/public/update-driver-location", async (req, res) => {
   }
 });
 
-// Debug endpoint to check actual data in database
 server.get("/api/debug/ride-data/:rideId", async (req, res) => {
   try {
     const { rideId } = req.params;
     console.log('🔍 Debug: Checking ride data for:', rideId);
-    
-    // Get the ride request
+ 
     const rideRequest = await RideRequest.findById(rideId);
     if (!rideRequest) {
       return res.status(404).json({ error: "Ride request not found" });
     }
-    
-    // Get raw driver data
+
     const driver = await Driver.findById(rideRequest.driverId);
-    // Get raw rider data  
+
     const rider = await Rider.findById(rideRequest.riderId);
     
     console.log('🔍 Raw driver data:', {
@@ -2472,11 +2415,6 @@ server.get("/api/debug/ride-data/:rideId", async (req, res) => {
   }
 });
 
-// Test endpoint to set sample locations for testing - DISABLED for production
-// server.post("/api/test/set-locations", async (req, res) => {
-//   // This endpoint has been disabled to prevent mock location interference
-//   res.status(404).json({ error: "Test endpoint disabled" });
-// });
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Enhanced Carpooling Server is running at http://localhost:${PORT}`);
